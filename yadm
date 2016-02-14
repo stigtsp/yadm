@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION=1.03
+VERSION=1.03.01-beta
 
 YADM_WORK="$HOME"
 YADM_DIR="$HOME/.yadm"
@@ -40,6 +40,7 @@ function main() {
 
   #; parse command line arguments
   internal_commands="^(alt|clean|clone|config|decrypt|encrypt|help|init|list|perms|version)$"
+  crypt_commands="^(add-gpg-user|crypt-init|crypt-status|export-key|lock|unlock)$"
   if [ -z "$*" ] ; then
     #; no argumnts will result in help()
     help
@@ -83,6 +84,8 @@ function main() {
     done
     [ ! -d $YADM_WORK ] && error_out "Work tree does not exist: [$YADM_WORK]"
     $YADM_COMMAND "$YADM_ARGS"
+  elif [[ "$1" =~ $crypt_commands ]] ; then
+    crypt_command "$@"
   else
     #; any other commands are simply passed through to git
     git_command "$@"
@@ -253,6 +256,36 @@ function encrypt() {
 
 }
 
+function crypt_command() {
+
+  require_crypt
+
+  #; translate 'crypt-init' to 'init' -- 'init' is reserved for yadm
+  if [ "$1" = "crypt-init" ] ; then
+    set -- "init" "${@:2}"
+  elif [ "$1" = "crypt-status" ] ; then
+    set -- "status" "${@:2}"
+  fi
+
+  #; git-crypt commands *must* be run relative to the work tree
+  #; the one exception is export-key. this will allow a relative
+  #; file to be specified on the command line
+  if [ ! "$1" = "export-key" ] ; then
+    YADM_WORK=$(git config core.worktree)
+    cd $YADM_WORK
+  fi
+
+  #; TODO: it is important to note in the documentation that specifying a FILE
+  #; when running `yadm unlock` the FILE *must* be fully qualified. this is
+  #; because the command must be run relative to the WORK TREE.
+
+  #; pass commands through to git-crypt
+  git-crypt "$@"
+
+  CHANGES_POSSIBLE=1
+
+}
+
 function git_command() {
 
   require_repo
@@ -372,6 +405,8 @@ function perms() {
     done < "$YADM_ENCRYPT"
   fi
 
+  #; TODO: restrict the permissions of all git-crypt encrypted files
+
   #; remove group/other permissions from collected globs
   chmod -f go-rwx ${GLOBS[@]} >/dev/null 2>&1
   #; TODO: detect and report changing permissions in a portable way
@@ -459,6 +494,10 @@ function require_git() {
 function require_gpg() {
   command -v gpg >/dev/null 2>&1 || \
     error_out "This functionality requires GPG to be installed, but the command gpg cannot be located."
+}
+function require_crypt() {
+  command -v git-crypt >/dev/null 2>&1 || \
+    error_out "This functionality requires git-crypt to be installed, but the command git-crypt cannot be located."
 }
 function require_repo() {
   [ -d "$YADM_REPO" ] || error_out "Git repo does not exist. did you forget to run 'init' or 'clone'?"
