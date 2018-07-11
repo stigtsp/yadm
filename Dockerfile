@@ -1,4 +1,4 @@
-FROM ubuntu:yakkety
+FROM ubuntu:18.04
 MAINTAINER Tim Byrne <sultan@locehilios.com>
 
 # Install prerequisites
