@@ -23,6 +23,11 @@ test: bats shellcheck
 parallel:
 	ls test/*bats | time parallel -q -P0 -- docker run --rm -v "$$PWD:/yadm:ro" yadm/testbed bash -c 'bats {}'
 
+.PHONY: pytest
+pytest:
+	@echo Running all pytest tests
+	@pytest --pspec -opspec_format=plaintext -ocache_dir=/tmp
+
 .PHONY: bats
 bats:
 	@echo Running all bats tests
@@ -58,3 +63,13 @@ man:
 .PHONY: wide
 wide:
 	man ./yadm.1
+
+.PHONY: sync-clock
+sync-clock:
+	docker run --rm --privileged alpine hwclock -s
+
+.PHONY: .env
+.env:
+	virtualenv .env
+	.env/bin/pip install --upgrade pip setuptools
+	.env/bin/pip install --upgrade pytest testinfra pytest-pspec
