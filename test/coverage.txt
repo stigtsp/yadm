@@ -1,0 +1,29 @@
+Track which tests have been implemented using pytest
+
+[✓] test/000_unit_syntax.bats
+[ ] test/001_unit_paths.bats
+[✓] test/002_unit_gpg_program.bats
+[✓] test/003_unit_git_program.bats
+[✓] test/004_unit_bootstrap_available.bats
+[ ] test/005_unit_set_operating_system.bats
+[✓] test/006_unit_query_distro.bats
+[ ] test/007_unit_parse_encrypt.bats
+[✓] test/100_accept_version.bats
+[✓] test/101_accept_help.bats
+[✓] test/102_accept_clean.bats
+[ ] test/103_accept_git.bats
+[ ] test/104_accept_init.bats
+[ ] test/105_accept_clone.bats
+[ ] test/106_accept_config.bats
+[ ] test/107_accept_list.bats
+[ ] test/108_accept_alt.bats
+[ ] test/109_accept_encryption.bats
+[ ] test/110_accept_perms.bats
+[ ] test/111_accept_wildcard_alt.bats
+[ ] test/112_accept_bootstrap.bats
+[ ] test/113_accept_jinja_alt.bats
+[ ] test/114_accept_enter.bats
+[✓] test/115_accept_introspect.bats
+[ ] test/116_accept_cygwin_copy.bats
+[ ] test/117_accept_hooks.bats
+[ ] test/118_accept_assert_private_dirs.bats

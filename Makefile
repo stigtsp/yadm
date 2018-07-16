@@ -26,7 +26,7 @@ parallel:
 .PHONY: pytest
 pytest:
 	@echo Running all pytest tests
-	@pytest --pspec -opspec_format=plaintext -ocache_dir=/tmp
+	@pytest -p no:pspec -ocache_dir=/tmp
 
 .PHONY: bats
 bats:
