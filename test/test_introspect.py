@@ -21,7 +21,7 @@ class Test_Introspection(object):
         """Introspection category, and expected results for the category."""
         return request.param
 
-    def test_introspect_category(self, runner, yadm_y, category, dir_repo):
+    def test_introspect_category(self, runner, yadm_y, category, paths):
         """Validate introspection category"""
         if category.name:
             run = runner(command=yadm_y('introspect', category.name))
@@ -30,7 +30,7 @@ class Test_Introspection(object):
         run.report()
         assert run.code == category.code
         if category.regex == 'MATCHREPO':
-            assert run.out.rstrip() == dir_repo
+            assert run.out.rstrip() == paths.repo
         elif category.regex:
             assert re.search(category.regex, run.out)
         else:

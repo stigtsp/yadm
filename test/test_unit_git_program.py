@@ -17,16 +17,15 @@ class Test_Unit_Git_Program(object):
         """Test options; program, expected code"""
         return request.param
 
-    def test_git_program(self, tmpdir, runner, yadm, option):
+    def test_git_program(self, runner, paths, option):
         """Set yadm.git-program, and test result of require_git"""
 
         # set configuration
-        file_config = tmpdir.join('config')
         if option.program:
             runner(command=[
                 'git',
                 'config',
-                '--file=%s' % file_config,
+                '--file=%s' % paths.config,
                 'yadm.git-program',
                 option.program,
             ]).report()
@@ -37,7 +36,7 @@ class Test_Unit_Git_Program(object):
             YADM_CONFIG="%s"
             require_git
             echo $GIT_PROGRAM
-        """ % (yadm, file_config)
+        """ % (paths.pgm, paths.config)
         run = runner(command=['bash'], inp=script)
 
         print script

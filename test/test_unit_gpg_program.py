@@ -17,16 +17,15 @@ class Test_Unit_Gpg_Program(object):
         """Test options; program, expected code"""
         return request.param
 
-    def test_gpg_program(self, tmpdir, runner, yadm, option):
+    def test_gpg_program(self, runner, paths, option):
         """Set yadm.gpg-program, and test result of require_gpg"""
 
         # set configuration
-        file_config = tmpdir.join('config')
         if option.program:
             runner(command=[
                 'git',
                 'config',
-                '--file=%s' % file_config,
+                '--file=%s' % paths.config,
                 'yadm.gpg-program',
                 option.program,
             ]).report()
@@ -37,7 +36,7 @@ class Test_Unit_Gpg_Program(object):
             YADM_CONFIG="%s"
             require_gpg
             echo $GPG_PROGRAM
-        """ % (yadm, file_config)
+        """ % (paths.pgm, paths.config)
         run = runner(command=['bash'], inp=script)
 
         print script
