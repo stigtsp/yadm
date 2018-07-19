@@ -11,7 +11,7 @@ ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # Install prerequisites
 RUN apt-get update && apt-get install -y git gnupg1 make shellcheck bats expect curl python-pip lsb-release
-RUN pip install envtpl pytest pytest-pspec testinfra
+RUN pip install envtpl pytest testinfra
 
 # Force GNUPG version 1 at path /usr/bin/gpg
 RUN ln -fs /usr/bin/gpg1 /usr/bin/gpg
