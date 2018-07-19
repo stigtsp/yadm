@@ -19,7 +19,7 @@ class Test_Enter(object):
             'not executable',
         ])
     def test_enter(self, runner, yadm_y, paths, shell, expected_code):
-        """Enter operates if $SHELL is not exported"""
+        """Enter tests"""
         env = os.environ.copy()
         if shell == 'delete':
             if 'SHELL' in env:
