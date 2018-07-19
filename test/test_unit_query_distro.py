@@ -1,6 +1,13 @@
+import pytest
+import sys
+
+
 class Test_Unit_Query_Distro(object):
     """Unit tests: query_distro"""
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin',
+        reason='lsb_release not avilable on darwin')
     def test_lsb_release_present(self, runner, yadm, distro):
         """Match lsb_release -si when present"""
         script = """

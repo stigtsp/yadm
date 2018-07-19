@@ -5,6 +5,12 @@ import pytest
 from subprocess import Popen, PIPE
 
 
+@pytest.fixture(scope='session')
+def shellcheck_version():
+    """Version of shellcheck supported"""
+    return '0.4.6'
+
+
 class Runner:
     """Class for running commands"""
 
