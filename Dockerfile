@@ -10,7 +10,7 @@ RUN locale-gen en_US.UTF-8
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # Install prerequisites
-RUN apt-get update && apt-get install -y git gnupg1 make shellcheck bats expect curl python-pip lsb-release
+RUN apt-get update && apt-get install -y git gnupg1 make shellcheck=0.4.6-1 bats expect curl python-pip lsb-release
 RUN pip install envtpl pytest testinfra
 
 # Force GNUPG version 1 at path /usr/bin/gpg
