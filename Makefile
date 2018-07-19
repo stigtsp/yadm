@@ -26,7 +26,7 @@ parallel:
 .PHONY: pytest
 pytest:
 	@echo Running all pytest tests
-	@pytest -p no:pspec -ocache_dir=/tmp
+	@pytest -ocache_dir=/tmp
 
 .PHONY: bats
 bats:
@@ -72,4 +72,4 @@ sync-clock:
 .env:
 	virtualenv .env
 	.env/bin/pip install --upgrade pip setuptools
-	.env/bin/pip install --upgrade pytest testinfra pytest-pspec
+	.env/bin/pip install --upgrade pytest testinfra
