@@ -1,33 +1,30 @@
-import collections
 import pytest
 
 
 class Test_Unit_Git_Program(object):
     """Unit tests: yadm.git-program"""
 
-    Option = collections.namedtuple(
-        'Option', ['program', 'code', 'value', 'match'])
-
-    @pytest.fixture(params=[
-        Option(None, 0, 'git', None),
-        Option('cat', 0, 'cat', None),
-        Option('badprogram', 1, None, 'badprogram'),
+    @ pytest.mark.parametrize(
+        'program, code, value, match', [
+            (None, 0, 'git', None),
+            ('cat', 0, 'cat', None),
+            ('badprogram', 1, None, 'badprogram'),
+        ], ids=[
+            'git missing',
+            'valid alternative',
+            'invalid alternative',
         ])
-    def option(self, request):
-        """Test options; program, expected code"""
-        return request.param
-
-    def test_git_program(self, runner, paths, option):
+    def test_git_program(self, runner, paths, program, code, value, match):
         """Set yadm.git-program, and test result of require_git"""
 
         # set configuration
-        if option.program:
+        if program:
             runner(command=[
                 'git',
                 'config',
                 '--file=%s' % paths.config,
                 'yadm.git-program',
-                option.program,
+                program,
             ]).report()
 
         # test require_git
@@ -42,12 +39,12 @@ class Test_Unit_Git_Program(object):
         print script
         run.report()
         # correct exit code
-        assert run.code == option.code
+        assert run.code == code
 
         # GIT_PROGRAM set correctly
-        if option.value:
-            assert run.out.rstrip() == option.value
+        if value:
+            assert run.out.rstrip() == value
 
         # error reported about bad config
-        if option.match:
-            assert option.match in run.out
+        if match:
+            assert match in run.out
