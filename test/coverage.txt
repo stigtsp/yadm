@@ -5,7 +5,7 @@ Track which tests have been implemented using pytest
 [✓] test/002_unit_gpg_program.bats
 [✓] test/003_unit_git_program.bats
 [✓] test/004_unit_bootstrap_available.bats
-[ ] test/005_unit_set_operating_system.bats
+[✓] test/005_unit_set_operating_system.bats
 [✓] test/006_unit_query_distro.bats
 [ ] test/007_unit_parse_encrypt.bats
 [✓] test/100_accept_version.bats

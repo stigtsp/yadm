@@ -22,7 +22,6 @@ class Test_Unit_Bootstrap_Available(object):
         script = """
             YADM_TEST=1 source %s
             YADM_BOOTSTRAP='%s'
-            ls -l $YADM_BOOTSTRAP
             bootstrap_available
         """ % (paths.pgm, paths.bootstrap)
         run = runner(command=['bash'], inp=script)
