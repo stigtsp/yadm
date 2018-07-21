@@ -1,8 +1,9 @@
+"""Global tests configuration"""
 import collections
-import distutils.dir_util
+import distutils.dir_util  # pylint: disable=no-name-in-module,import-error
 import os
-import pytest
 from subprocess import Popen, PIPE
+import pytest
 
 
 @pytest.fixture(scope='session')
@@ -11,12 +12,24 @@ def shellcheck_version():
     return '0.4.6'
 
 
-class Runner:
+@pytest.fixture(scope='session')
+def pylint_version():
+    """Version of pylint supported"""
+    return '1.9.2'
+
+
+@pytest.fixture(scope='session')
+def flake8_version():
+    """Version of flake8 supported"""
+    return '3.5.0'
+
+
+class Runner(object):
     """Class for running commands"""
 
     def __init__(
             self,
-            command=[],
+            command,
             inp=None,
             shell=False,
             cwd=None,
@@ -42,10 +55,10 @@ class Runner:
     def __repr__(self):
         if self.label:
             return 'CMD(%s)' % self.label
-        else:
-            return 'CMD%s' % str(self.command)
+        return 'CMD%s' % str(self.command)
 
     def report(self):
+        """Print code/stdout/stderr"""
         print '%s' % self
         print '  code:%s' % self.code
         print '  stdout:%s' % self.out
@@ -94,7 +107,7 @@ def paths(tmpdir, yadm):
     dir_repo = dir_yadm.mkdir('repo.git')
     file_config = dir_yadm.join('config')
     file_bootstrap = dir_yadm.join('bootstrap')
-    Paths = collections.namedtuple(
+    paths = collections.namedtuple(
         'Paths', [
             'pgm',
             'root',
@@ -104,7 +117,7 @@ def paths(tmpdir, yadm):
             'config',
             'bootstrap',
             ])
-    return Paths(
+    return paths(
         yadm,
         dir_root,
         dir_work,
@@ -117,8 +130,9 @@ def paths(tmpdir, yadm):
 
 @pytest.fixture()
 def yadm_y(paths):
-    """Function to produce params for running yadm with -Y"""
+    """Generate custom command_list function"""
     def command_list(*args):
+        """Produce params for running yadm with -Y"""
         return [paths.pgm, '-Y', str(paths.yadm)] + list(args)
     return command_list
 
@@ -152,15 +166,16 @@ def dataset_one(tmpdir_factory, runner):
         command=['git', 'commit', '--allow-empty', '-m', 'Initial commit'],
         env=env)
 
-    Dataset = collections.namedtuple('Dataset', ['work', 'repo'])
-    return Dataset(work, repo)
+    dataset = collections.namedtuple('Dataset', ['work', 'repo'])
+    return dataset(work, repo)
 
 
 @pytest.fixture()
 def worktree1(dataset_one, paths):
     """Function scoped copy of ds1.work"""
     print "COPY DS1.work"
-    distutils.dir_util.copy_tree(str(dataset_one.work), str(paths.work))
+    distutils.dir_util.copy_tree(  # pylint: disable=no-member
+        str(dataset_one.work), str(paths.work))
     return None
 
 
@@ -168,7 +183,8 @@ def worktree1(dataset_one, paths):
 def repo1(runner, dataset_one, paths):
     """Function scoped copy of ds1.repo"""
     print "COPY DS1.repo"
-    distutils.dir_util.copy_tree(str(dataset_one.repo), str(paths.repo))
+    distutils.dir_util.copy_tree(  # pylint: disable=no-member
+        str(dataset_one.repo), str(paths.repo))
     env = os.environ.copy()
     env['GIT_DIR'] = str(paths.repo)
     runner(
@@ -180,6 +196,9 @@ def repo1(runner, dataset_one, paths):
 @pytest.fixture()
 def ds1(worktree1, repo1):
     """Function scoped copy of ds1"""
+    # pylint: disable=unused-argument
+    # This is ignored because @pytest.mark.usefixtures('worktree1', 'repo1')
+    # cannot be applied to another fixture.
     return None
 
 
