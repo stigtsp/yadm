@@ -20,7 +20,7 @@ Track which tests have been implemented using pytest
 [ ] test/109_accept_encryption.bats
 [ ] test/110_accept_perms.bats
 [ ] test/111_accept_wildcard_alt.bats
-[ ] test/112_accept_bootstrap.bats
+[✓] test/112_accept_bootstrap.bats
 [ ] test/113_accept_jinja_alt.bats
 [✓] test/114_accept_enter.bats
 [✓] test/115_accept_introspect.bats
