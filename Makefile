@@ -26,7 +26,7 @@ parallel:
 .PHONY: pytest
 pytest:
 	@echo Running all pytest tests
-	@pytest -ocache_dir=/tmp
+	@pytest -v
 
 .PHONY: bats
 bats:
