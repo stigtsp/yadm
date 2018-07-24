@@ -138,15 +138,27 @@ def yadm_y(paths):
 
 
 @pytest.fixture(scope='session')
-def dataset_one(tmpdir_factory, runner):
+def ds1_files():
+    """Meta-data for dataset one files"""
+    datafile = collections.namedtuple(
+        'Datafile', ['path', 'tracked'])
+    return [
+        datafile('t1', True),
+        datafile('d1/t2', True),
+        datafile('u1', False),
+        datafile('d2/u2', False),
+    ]
+
+
+@pytest.fixture(scope='session')
+def dataset_one(tmpdir_factory, ds1_files, runner):
     """A set of test data, worktree & repo"""
     config_git(runner)
-    print 'CREATING GLOBAL DATASET1'
     data = tmpdir_factory.mktemp('ds1')
 
     work = data.mkdir('work')
-    for path in ['f1']:
-        work.join(path).write(path, ensure=True)
+    for datafile in ds1_files:
+        work.join(datafile.path).write(datafile.path, ensure=True)
 
     repo = data.mkdir('repo.git')
     env = os.environ.copy()
@@ -162,6 +174,13 @@ def dataset_one(tmpdir_factory, runner):
     runner(
         command=['git', 'config', 'yadm.managed', 'true'],
         env=env)
+    runner(
+        command=['git', 'config', 'core.worktree', str(work)],
+        env=env)
+    runner(
+        command=['git', 'add'] +
+        [str(work.join(f.path)) for f in ds1_files if f.tracked],
+        env=env).report()
     runner(
         command=['git', 'commit', '--allow-empty', '-m', 'Initial commit'],
         env=env)
