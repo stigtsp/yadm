@@ -141,13 +141,17 @@ def yadm_y(paths):
 def ds1_files():
     """Meta-data for dataset one files"""
     datafile = collections.namedtuple(
-        'Datafile', ['path', 'tracked'])
-    return [
-        datafile('t1', True),
-        datafile('d1/t2', True),
-        datafile('u1', False),
-        datafile('d2/u2', False),
-    ]
+        'Datafile', ['path', 'tracked', 'private'])
+    return (
+        datafile('t1', True, False),
+        datafile('d1/t2', True, False),
+        datafile('u1', False, False),
+        datafile('d2/u2', False, False),
+        datafile('.ssh/p1', False, True),
+        datafile('.ssh/.p2', False, True),
+        datafile('.gnupg/p3', False, True),
+        datafile('.gnupg/.p4', False, True),
+    )
 
 
 @pytest.fixture(scope='session')

@@ -16,7 +16,10 @@ def test_pdirs_missing(runner, yadm_y, paths):
 
     # confirm directories are missing at start
     for pdir in PRIVATE_DIRS:
-        assert not paths.work.join(pdir).exists()
+        path = paths.work.join(pdir)
+        if path.exists():
+            path.remove()
+        assert not path.exists()
 
     # run status
     run = runner(command=yadm_y('status'), env={'DEBUG': 'yes'})
@@ -48,7 +51,10 @@ def test_pdirs_missing_apd_false(runner, yadm_y, paths):
 
     # confirm directories are missing at start
     for pdir in PRIVATE_DIRS:
-        assert not paths.work.join(pdir).exists()
+        path = paths.work.join(pdir)
+        if path.exists():
+            path.remove()
+        assert not path.exists()
 
     # set configuration
     run = runner(command=yadm_y(
@@ -78,7 +84,9 @@ def test_pdirs_exist_apd_false(runner, yadm_y, paths):
 
     # create permissive directories
     for pdir in PRIVATE_DIRS:
-        path = paths.work.mkdir(pdir)
+        path = paths.work.join(pdir)
+        if not path.isdir():
+            path.mkdir()
         path.chmod(0777)
         assert path.stat().mode == 040777
 
