@@ -4,15 +4,13 @@ import re
 import pytest
 
 
-pytestmark = pytest.mark.usefixtures('ds1')
-
-
 @pytest.mark.parametrize(
     'location', [
         'work',
         'outside',
         'subdir',
     ])
+@pytest.mark.usefixtures('ds1')
 def test_list(runner, yadm_y, paths, ds1_files, location):
     """List tests"""
     if location == 'work':

@@ -3,9 +3,6 @@ import os
 import pytest
 
 
-pytestmark = pytest.mark.usefixtures('ds1')
-
-
 @pytest.mark.parametrize(
     'shell, expected_code', [
         ('delete', 0),
@@ -18,6 +15,7 @@ pytestmark = pytest.mark.usefixtures('ds1')
         'env',
         'not executable',
     ])
+@pytest.mark.usefixtures('ds1')
 def test_enter(runner, yadm_y, paths, shell, expected_code):
     """Enter tests"""
     env = os.environ.copy()
