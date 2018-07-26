@@ -15,7 +15,7 @@ import pytest
         'env',
         'not executable',
     ])
-@pytest.mark.usefixtures('ds1')
+@pytest.mark.usefixtures('ds1_copy')
 def test_enter(runner, yadm_y, paths, shell, expected_code):
     """Enter tests"""
     env = os.environ.copy()

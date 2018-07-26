@@ -3,7 +3,7 @@ import re
 import pytest
 
 
-@pytest.mark.usefixtures('ds1')
+@pytest.mark.usefixtures('ds1_copy')
 def test_git(runner, yadm_y, paths):
     """Test series of passthrough git commands
 

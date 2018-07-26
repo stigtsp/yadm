@@ -2,7 +2,7 @@
 import re
 import pytest
 
-pytestmark = pytest.mark.usefixtures('ds1')
+pytestmark = pytest.mark.usefixtures('ds1_copy')
 PRIVATE_DIRS = ['.gnupg', '.ssh']
 
 

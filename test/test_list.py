@@ -10,8 +10,8 @@ import pytest
         'outside',
         'subdir',
     ])
-@pytest.mark.usefixtures('ds1')
-def test_list(runner, yadm_y, paths, ds1_files, location):
+@pytest.mark.usefixtures('ds1_copy')
+def test_list(runner, yadm_y, paths, ds1, location):
     """List tests"""
     if location == 'work':
         run_dir = paths.work
@@ -19,7 +19,7 @@ def test_list(runner, yadm_y, paths, ds1_files, location):
         run_dir = paths.work.join('..')
     elif location == 'subdir':
         # find first directory with tracked data
-        for _ in ds1_files:
+        for _ in ds1:
             if _.tracked:
                 dirname = re.findall(r'^[^/]+/', _.path)
                 if dirname:
@@ -31,7 +31,7 @@ def test_list(runner, yadm_y, paths, ds1_files, location):
         run = runner(command=yadm_y('list', '-a'))
         run.report()
         returned_files = set(run.out.splitlines())
-        expected_files = set([_.path for _ in ds1_files if _.tracked])
+        expected_files = set([_.path for _ in ds1 if _.tracked])
         assert returned_files == expected_files
         # test without '-a'
         # should get all tracked files, relative to the work path unless in a
@@ -45,6 +45,6 @@ def test_list(runner, yadm_y, paths, ds1_files, location):
             # only expect files within the subdir
             # names should be relative to subdir
             expected_files = set(
-                [_.path[len(basepath)+1:] for _ in ds1_files
+                [_.path[len(basepath)+1:] for _ in ds1
                  if _.tracked and _.path.startswith(basepath)])
         assert returned_files == expected_files

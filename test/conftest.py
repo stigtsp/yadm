@@ -137,31 +137,119 @@ def yadm_y(paths):
     return command_list
 
 
+class DataFile(object):
+    """Datafile object"""
+
+    def __init__(self, path, tracked=True, private=False):
+        self._path = path
+        self._tracked = tracked
+        self._private = private
+
+    @property
+    def path(self):
+        """Path property"""
+        return self._path
+
+    @property
+    def tracked(self):
+        """Tracked property"""
+        return self._tracked
+
+    @property
+    def private(self):
+        """Private property"""
+        return self._private
+
+
+class DataSet(object):
+    """Dataset object"""
+
+    def __init__(self):
+        self.__files = list()
+        self.__dirs = list()
+
+    def __repr__(self):
+        return '[DS with %i files; %i tracked, %i private]' % (
+            len(self),
+            len(self.tracked),
+            len(self.private),
+            )
+
+    def __iter__(self):
+        return iter(self.__files)
+
+    def __len__(self):
+        return len(self.__files)
+
+    def __contains__(self, datafile):
+        if [f for f in self.__files if f.path == datafile]:
+            return True
+        if datafile in self.__files:
+            return True
+        return False
+
+    def add_file(self, path, tracked=True, private=False):
+        """Add file to data set"""
+        if path not in self:
+            self.__files.append(DataFile(path, tracked, private))
+        dname = os.path.dirname(path)
+        if dname and dname not in self.__dirs:
+            self.__dirs.append(dname)
+
+    @property
+    def files(self):
+        """List of DataFiles in DataSet"""
+        return list(self.__files)
+
+    @property
+    def tracked(self):
+        """List of tracked DataFiles in DataSet"""
+        return [f for f in self.__files if f.tracked]
+
+    @property
+    def private(self):
+        """List of private DataFiles in DataSet"""
+        return [f for f in self.__files if f.private]
+
+    @property
+    def dirs(self):
+        """List of directories in DataSet"""
+        return list(self.__dirs)
+
+    @property
+    def plain_dirs(self):
+        """List of directories in DataSet not starting with '.'"""
+        return [d for d in self.dirs if not d.startswith('.')]
+
+    @property
+    def hidden_dirs(self):
+        """List of directories in DataSet starting with '.'"""
+        return [d for d in self.dirs if d.startswith('.')]
+
+
 @pytest.fixture(scope='session')
-def ds1_files():
+def ds1():
     """Meta-data for dataset one files"""
-    datafile = collections.namedtuple(
-        'Datafile', ['path', 'tracked', 'private'])
-    return (
-        datafile('t1', True, False),
-        datafile('d1/t2', True, False),
-        datafile('u1', False, False),
-        datafile('d2/u2', False, False),
-        datafile('.ssh/p1', False, True),
-        datafile('.ssh/.p2', False, True),
-        datafile('.gnupg/p3', False, True),
-        datafile('.gnupg/.p4', False, True),
-    )
+    dset = DataSet()
+    dset.add_file('t1')
+    dset.add_file('d1/t2')
+    dset.add_file('u1', tracked=False)
+    dset.add_file('d2/u2', tracked=False)
+    dset.add_file('.ssh/p1', tracked=False, private=True)
+    dset.add_file('.ssh/p2', tracked=False, private=True)
+    dset.add_file('.gnupg/p3', tracked=False, private=True)
+    dset.add_file('.gnupg/.p4', tracked=False, private=True)
+    return dset
 
 
 @pytest.fixture(scope='session')
-def dataset_one(tmpdir_factory, ds1_files, runner):
+def ds1_data(tmpdir_factory, ds1, runner):
     """A set of test data, worktree & repo"""
     config_git(runner)
     data = tmpdir_factory.mktemp('ds1')
 
     work = data.mkdir('work')
-    for datafile in ds1_files:
+    for datafile in ds1:
         work.join(datafile.path).write(datafile.path, ensure=True)
 
     repo = data.mkdir('repo.git')
@@ -183,31 +271,31 @@ def dataset_one(tmpdir_factory, ds1_files, runner):
         env=env)
     runner(
         command=['git', 'add'] +
-        [str(work.join(f.path)) for f in ds1_files if f.tracked],
+        [str(work.join(f.path)) for f in ds1 if f.tracked],
         env=env).report()
     runner(
         command=['git', 'commit', '--allow-empty', '-m', 'Initial commit'],
         env=env)
 
-    dataset = collections.namedtuple('Dataset', ['work', 'repo'])
-    return dataset(work, repo)
+    data = collections.namedtuple('Data', ['work', 'repo'])
+    return data(work, repo)
 
 
 @pytest.fixture()
-def worktree1(dataset_one, paths):
-    """Function scoped copy of ds1.work"""
+def ds1_work_copy(ds1_data, paths):
+    """Function scoped copy of ds1_data.work"""
     print "COPY DS1.work"
     distutils.dir_util.copy_tree(  # pylint: disable=no-member
-        str(dataset_one.work), str(paths.work))
+        str(ds1_data.work), str(paths.work))
     return None
 
 
 @pytest.fixture()
-def repo1(runner, dataset_one, paths):
-    """Function scoped copy of ds1.repo"""
+def ds1_repo_copy(runner, ds1_data, paths):
+    """Function scoped copy of ds1_data.repo"""
     print "COPY DS1.repo"
     distutils.dir_util.copy_tree(  # pylint: disable=no-member
-        str(dataset_one.repo), str(paths.repo))
+        str(ds1_data.repo), str(paths.repo))
     env = os.environ.copy()
     env['GIT_DIR'] = str(paths.repo)
     runner(
@@ -217,10 +305,11 @@ def repo1(runner, dataset_one, paths):
 
 
 @pytest.fixture()
-def ds1(worktree1, repo1):
-    """Function scoped copy of ds1"""
+def ds1_copy(ds1_work_copy, ds1_repo_copy):
+    """Function scoped copy of ds1_data"""
     # pylint: disable=unused-argument
-    # This is ignored because @pytest.mark.usefixtures('worktree1', 'repo1')
+    # This is ignored because
+    # @pytest.mark.usefixtures('ds1_work_copy', 'ds1_repo_copy')
     # cannot be applied to another fixture.
     return None
 
