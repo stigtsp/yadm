@@ -2,6 +2,7 @@
 import collections
 import distutils.dir_util  # pylint: disable=no-name-in-module,import-error
 import os
+import copy
 from subprocess import Popen, PIPE
 import pytest
 
@@ -141,24 +142,37 @@ class DataFile(object):
     """Datafile object"""
 
     def __init__(self, path, tracked=True, private=False):
-        self._path = path
-        self._tracked = tracked
-        self._private = private
+        self.__path = path
+        self.__parent = None
+        self.__tracked = tracked
+        self.__private = private
 
     @property
     def path(self):
         """Path property"""
-        return self._path
+        return self.__path
+
+    @property
+    def relative(self):
+        """Relative path property"""
+        if self.__parent:
+            return self.__parent.join(self.path)
+        raise BaseException('Unable to provide relative path, no parent')
 
     @property
     def tracked(self):
         """Tracked property"""
-        return self._tracked
+        return self.__tracked
 
     @property
     def private(self):
         """Private property"""
-        return self._private
+        return self.__private
+
+    def relative_to(self, parent):
+        """Update all relative paths to this py.path"""
+        self.__parent = parent
+        return
 
 
 class DataSet(object):
@@ -167,6 +181,8 @@ class DataSet(object):
     def __init__(self):
         self.__files = list()
         self.__dirs = list()
+        self.__tracked_dirs = list()
+        self.__relpath = None
 
     def __repr__(self):
         return '[DS with %i files; %i tracked, %i private]' % (
@@ -187,14 +203,6 @@ class DataSet(object):
         if datafile in self.__files:
             return True
         return False
-
-    def add_file(self, path, tracked=True, private=False):
-        """Add file to data set"""
-        if path not in self:
-            self.__files.append(DataFile(path, tracked, private))
-        dname = os.path.dirname(path)
-        if dname and dname not in self.__dirs:
-            self.__dirs.append(dname)
 
     @property
     def files(self):
@@ -226,9 +234,35 @@ class DataSet(object):
         """List of directories in DataSet starting with '.'"""
         return [d for d in self.dirs if d.startswith('.')]
 
+    @property
+    def tracked_dirs(self):
+        """List of directories in DataSet not starting with '.'"""
+        return [d for d in self.__tracked_dirs if not d.startswith('.')]
+
+    def add_file(self, path, tracked=True, private=False):
+        """Add file to data set"""
+        if path not in self:
+            datafile = DataFile(path, tracked, private)
+            if self.__relpath:
+                datafile.relative_to(self.__relpath)
+            self.__files.append(datafile)
+
+        dname = os.path.dirname(path)
+        if dname and dname not in self.__dirs:
+            self.__dirs.append(dname)
+            if tracked:
+                self.__tracked_dirs.append(dname)
+
+    def relative_to(self, relpath):
+        """Update all relative paths to this py.path"""
+        self.__relpath = relpath
+        for datafile in self.files:
+            datafile.relative_to(self.__relpath)
+        return
+
 
 @pytest.fixture(scope='session')
-def ds1():
+def ds1_dset():
     """Meta-data for dataset one files"""
     dset = DataSet()
     dset.add_file('t1')
@@ -243,13 +277,13 @@ def ds1():
 
 
 @pytest.fixture(scope='session')
-def ds1_data(tmpdir_factory, ds1, runner):
+def ds1_data(tmpdir_factory, ds1_dset, runner):
     """A set of test data, worktree & repo"""
     config_git(runner)
     data = tmpdir_factory.mktemp('ds1')
 
     work = data.mkdir('work')
-    for datafile in ds1:
+    for datafile in ds1_dset:
         work.join(datafile.path).write(datafile.path, ensure=True)
 
     repo = data.mkdir('repo.git')
@@ -271,7 +305,7 @@ def ds1_data(tmpdir_factory, ds1, runner):
         env=env)
     runner(
         command=['git', 'add'] +
-        [str(work.join(f.path)) for f in ds1 if f.tracked],
+        [str(work.join(f.path)) for f in ds1_dset if f.tracked],
         env=env).report()
     runner(
         command=['git', 'commit', '--allow-empty', '-m', 'Initial commit'],
@@ -312,6 +346,18 @@ def ds1_copy(ds1_work_copy, ds1_repo_copy):
     # @pytest.mark.usefixtures('ds1_work_copy', 'ds1_repo_copy')
     # cannot be applied to another fixture.
     return None
+
+
+@pytest.fixture()
+def ds1(ds1_work_copy, paths, ds1_dset):
+    """Function scoped ds1_dset w/paths"""
+    # pylint: disable=unused-argument
+    # This is ignored because
+    # @pytest.mark.usefixtures('ds1_copy')
+    # cannot be applied to another fixture.
+    dscopy = copy.deepcopy(ds1_dset)
+    dscopy.relative_to(copy.deepcopy(paths.work))
+    return dscopy
 
 
 @pytest.fixture(scope='session')

@@ -1,6 +1,5 @@
 """Test list"""
 import os
-import re
 import pytest
 
 
@@ -18,20 +17,15 @@ def test_list(runner, yadm_y, paths, ds1, location):
     elif location == 'outside':
         run_dir = paths.work.join('..')
     elif location == 'subdir':
-        # find first directory with tracked data
-        for _ in ds1:
-            if _.tracked:
-                dirname = re.findall(r'^[^/]+/', _.path)
-                if dirname:
-                    run_dir = paths.work.join(dirname[0])
-                    break
+        # first directory with tracked data
+        run_dir = paths.work.join(ds1.tracked_dirs[0])
     with run_dir.as_cwd():
         # test with '-a'
         # should get all tracked files, relative to the work path
         run = runner(command=yadm_y('list', '-a'))
         run.report()
         returned_files = set(run.out.splitlines())
-        expected_files = set([_.path for _ in ds1 if _.tracked])
+        expected_files = set([e.path for e in ds1 if e.tracked])
         assert returned_files == expected_files
         # test without '-a'
         # should get all tracked files, relative to the work path unless in a
@@ -45,6 +39,6 @@ def test_list(runner, yadm_y, paths, ds1, location):
             # only expect files within the subdir
             # names should be relative to subdir
             expected_files = set(
-                [_.path[len(basepath)+1:] for _ in ds1
-                 if _.tracked and _.path.startswith(basepath)])
+                [e.path[len(basepath)+1:] for e in ds1
+                 if e.tracked and e.path.startswith(basepath)])
         assert returned_files == expected_files
