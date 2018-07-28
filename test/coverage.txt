@@ -1,7 +1,7 @@
 Track which tests have been implemented using pytest
 
 [✓] test/000_unit_syntax.bats
-[ ] test/001_unit_paths.bats
+[✓] test/001_unit_paths.bats
 [✓] test/002_unit_gpg_program.bats
 [✓] test/003_unit_git_program.bats
 [✓] test/004_unit_bootstrap_available.bats
