@@ -1,4 +1,5 @@
 """Unit tests: configure_paths"""
+import pytest
 
 HOME = '/testhome'
 YDIR = '.yadm'
@@ -9,112 +10,42 @@ ARCHIVE = 'files.gpg'
 BOOTSTRAP = 'bootstrap'
 
 
-def test_paths_default(runner, paths):
-    """Default paths"""
+@pytest.mark.parametrize(
+    'override, expect', [
+        (None, {}),
+        ('-Y', {}),
+        ('--yadm-repo', {'repo': 'YADM_REPO', 'git': 'GIT_DIR'}),
+        ('--yadm-config', {'config': 'YADM_CONFIG'}),
+        ('--yadm-encrypt', {'encrypt': 'YADM_ENCRYPT'}),
+        ('--yadm-archive', {'archive': 'YADM_ARCHIVE'}),
+        ('--yadm-bootstrap', {'bootstrap': 'YADM_BOOTSTRAP'}),
+    ], ids=[
+        'default',
+        'override yadm dir',
+        'override repo',
+        'override config',
+        'override encrypt',
+        'override archive',
+        'override bootstrap',
+    ])
+def test_config(runner, paths, override, expect):
+    """Test configure_paths"""
+    opath = 'override'
     matches = match_map()
-    run_test(runner, paths, [], matches.values(), 0)
+    args = []
+    if override == '-Y':
+        matches = match_map('/' + opath)
 
+    if override:
+        args = [override, '/' + opath]
+        for ekey in expect.keys():
+            matches[ekey] = '%s="/%s"' % (expect[ekey], opath)
+        run_test(
+            runner, paths,
+            [override, opath],
+            ['must specify a fully qualified'], 1)
 
-def test_paths_override_yadm(runner, paths):
-    """Override yadm_dir"""
-    # not fully qualified
-    run_test(
-        runner, paths,
-        ['-Y', 'override'],
-        ['must specify a fully qualified'], 1)
-
-    # fully qualified
-    matches = match_map('/override')
-    run_test(
-        runner, paths,
-        ['-Y', '/override'],
-        matches.values(), 0)
-
-
-def test_paths_override_repo(runner, paths):
-    """Override yadm_repo"""
-    # not fully qualified
-    run_test(
-        runner, paths,
-        ['--yadm-repo', 'override'],
-        ['must specify a fully qualified'], 1)
-
-    # fully qualified
-    matches = match_map()
-    matches['repo'] = 'YADM_REPO="%s"' % '/override'
-    matches['git'] = 'GIT_DIR="%s"' % '/override'
-    run_test(
-        runner, paths,
-        ['--yadm-repo', '/override'],
-        matches.values(), 0)
-
-
-def test_paths_override_config(runner, paths):
-    """Override yadm_config"""
-    # not fully qualified
-    run_test(
-        runner, paths,
-        ['--yadm-config', 'override'],
-        ['must specify a fully qualified'], 1)
-
-    # fully qualified
-    matches = match_map()
-    matches['config'] = 'YADM_CONFIG="%s"' % '/override'
-    run_test(
-        runner, paths,
-        ['--yadm-config', '/override'],
-        matches.values(), 0)
-
-
-def test_paths_override_encrypt(runner, paths):
-    """Override yadm_encrypt"""
-    # not fully qualified
-    run_test(
-        runner, paths,
-        ['--yadm-encrypt', 'override'],
-        ['must specify a fully qualified'], 1)
-
-    # fully qualified
-    matches = match_map()
-    matches['encrypt'] = 'YADM_ENCRYPT="%s"' % '/override'
-    run_test(
-        runner, paths,
-        ['--yadm-encrypt', '/override'],
-        matches.values(), 0)
-
-
-def test_paths_override_archive(runner, paths):
-    """Override yadm_archive"""
-    # not fully qualified
-    run_test(
-        runner, paths,
-        ['--yadm-archive', 'override'],
-        ['must specify a fully qualified'], 1)
-
-    # fully qualified
-    matches = match_map()
-    matches['archive'] = 'YADM_ARCHIVE="%s"' % '/override'
-    run_test(
-        runner, paths,
-        ['--yadm-archive', '/override'],
-        matches.values(), 0)
-
-
-def test_paths_override_bootstrap(runner, paths):
-    """Override yadm_bootstrap"""
-    # not fully qualified
-    run_test(
-        runner, paths,
-        ['--yadm-bootstrap', 'override'],
-        ['must specify a fully qualified'], 1)
-
-    # fully qualified
-    matches = match_map()
-    matches['bootstrap'] = 'YADM_BOOTSTRAP="%s"' % '/override'
-    run_test(
-        runner, paths,
-        ['--yadm-bootstrap', '/override'],
-        matches.values(), 0)
+    run_test(runner, paths, args, matches.values(), 0)
 
 
 def match_map(yadm_dir=None):
