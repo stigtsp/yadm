@@ -20,8 +20,8 @@ def test_bootstrap(
     if executable:
         paths.bootstrap.write(
             '#!/bin/bash\n'
-            'echo %s\n'
-            'exit %s\n' % (expect, code)
+            f'echo {expect}\n'
+            f'exit {code}\n'
         )
         paths.bootstrap.chmod(0o775)
     run = runner(command=yadm_y('bootstrap'))

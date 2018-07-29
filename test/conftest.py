@@ -60,8 +60,8 @@ class Runner(object):
 
     def __repr__(self):
         if self.label:
-            return 'CMD(%s)' % self.label
-        return 'CMD%s' % str(self.command)
+            return f'CMD({self.label})'
+        return f'CMD{self.command}'
 
     def report(self):
         """Print code/stdout/stderr"""
@@ -189,10 +189,10 @@ class DataSet(object):
         self.__relpath = None
 
     def __repr__(self):
-        return '[DS with %i files; %i tracked, %i private]' % (
-            len(self),
-            len(self.tracked),
-            len(self.private),
+        return (
+            f'[DS with {len(self)} files; '
+            f'{len(self.tracked)} tracked, '
+            f'{len(self.private)} private]'
             )
 
     def __iter__(self):

@@ -22,11 +22,11 @@ def test_bootstrap_exec(runner, paths):
 
 def run_test(runner, paths, expected_code):
     """Run bootstrap_available, and test result"""
-    script = """
-        YADM_TEST=1 source %s
-        YADM_BOOTSTRAP='%s'
+    script = f"""
+        YADM_TEST=1 source {paths.pgm}
+        YADM_BOOTSTRAP='{paths.bootstrap}'
         bootstrap_available
-    """ % (paths.pgm, paths.bootstrap)
+    """
     run = runner(command=['bash'], inp=script)
     print(script)
     run.report()

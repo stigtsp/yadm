@@ -21,18 +21,18 @@ def test_x_program(runner, paths, program, executable, code, value, match):
         runner(command=[
             'git',
             'config',
-            '--file=%s' % paths.config,
-            'yadm.%s-program' % program,
+            f'--file={paths.config}',
+            f'yadm.{program}-program',
             executable,
         ]).report()
 
     # test require_[git,gpg]
-    script = """
-        YADM_TEST=1 source %s
-        YADM_CONFIG="%s"
-        require_%s
-        echo $%s_PROGRAM
-    """ % (paths.pgm, paths.config, program, program.upper())
+    script = f"""
+        YADM_TEST=1 source {paths.pgm}
+        YADM_CONFIG="{paths.config}"
+        require_{program}
+        echo ${program.upper()}_PROGRAM
+    """
     run = runner(command=['bash'], inp=script)
 
     print(script)

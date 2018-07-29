@@ -14,7 +14,7 @@ def expected_version(yadm):
         open(yadm).read())
     if yadm_version:
         return yadm_version[0]
-    pytest.fail('version not found in %s' % yadm)
+    pytest.fail(f'version not found in {yadm}')
     return 'not found'
 
 
@@ -31,4 +31,4 @@ def test_reported_version(
     run = runner(command=yadm_y('version'))
     run.report()
     assert run.success
-    assert run.out == 'yadm %s\n' % (expected_version)
+    assert run.out == f'yadm {expected_version}\n'

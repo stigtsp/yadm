@@ -38,6 +38,6 @@ def test_enter(runner, yadm_y, paths, shell, expected_code):
     if expected_code == 1:
         assert 'does not refer to an executable' in run.out
     if 'env' in shell:
-        assert 'GIT_DIR=%s' % paths.repo in run.out
+        assert f'GIT_DIR={paths.repo}' in run.out
         assert 'PROMPT=yadm shell' in run.out
         assert 'PS1=yadm shell' in run.out

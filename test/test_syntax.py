@@ -15,7 +15,7 @@ def test_syntax(runner, yadm):
 def test_shellcheck(runner, yadm, shellcheck_version):
     """Passes shellcheck"""
     run = runner(command=['shellcheck', '-V'])
-    if 'version: %s' % shellcheck_version not in run.out:
+    if f'version: {shellcheck_version}' not in run.out:
         pytest.skip('Unsupported shellcheck version')
     run = runner(command=['shellcheck', '-s', 'bash', yadm])
     print(run.out)
@@ -26,12 +26,12 @@ def test_shellcheck(runner, yadm, shellcheck_version):
 def test_pylint(runner, pylint_version):
     """Passes pylint"""
     run = runner(command=['pylint', '--version'])
-    if 'pylint %s' % pylint_version not in run.out:
+    if f'pylint {pylint_version}' not in run.out:
         pytest.skip('Unsupported pylint version')
     pyfiles = list()
     for tfile in os.listdir('test'):
         if tfile.endswith('.py'):
-            pyfiles.append('test/%s' % tfile)
+            pyfiles.append(f'test/{tfile}')
     run = runner(command=['pylint'] + pyfiles)
     print(run.out)
     print(run.err)

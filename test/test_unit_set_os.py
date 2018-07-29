@@ -25,12 +25,12 @@ def test_set_operating_system(
     proc_version = paths.root.join('proc_version')
     if proc_value != 'missing':
         proc_version.write(proc_value)
-    script = """
-        YADM_TEST=1 source %s
-        PROC_VERSION=%s
+    script = f"""
+        YADM_TEST=1 source {paths.pgm}
+        PROC_VERSION={proc_version}
         set_operating_system
         echo $OPERATING_SYSTEM
-    """ % (paths.pgm, proc_version)
+    """
     run = runner(command=['bash'], inp=script)
     print(script)
     run.report()

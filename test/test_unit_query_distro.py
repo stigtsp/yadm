@@ -8,10 +8,10 @@ import pytest
     reason='lsb_release not avilable on darwin')
 def test_lsb_release_present(runner, yadm, distro):
     """Match lsb_release -si when present"""
-    script = """
-        YADM_TEST=1 source %s
+    script = f"""
+        YADM_TEST=1 source {yadm}
         query_distro
-    """ % (yadm)
+    """
     run = runner(command=['bash'], inp=script)
     print(script)
     run.report()
@@ -21,11 +21,11 @@ def test_lsb_release_present(runner, yadm, distro):
 
 def test_lsb_release_missing(runner, yadm):
     """Empty value when missing"""
-    script = """
-        YADM_TEST=1 source %s
+    script = f"""
+        YADM_TEST=1 source {yadm}
         LSB_RELEASE_PROGRAM="missing_lsb_release"
         query_distro
-    """ % (yadm)
+    """
     run = runner(command=['bash'], inp=script)
     print(script)
     run.report()
