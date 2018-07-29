@@ -25,7 +25,7 @@ def test_enter(runner, yadm_y, paths, shell, expected_code):
     elif shell == 'noexec':
         noexec = paths.root.join('noexec')
         noexec.write('')
-        noexec.chmod(0664)
+        noexec.chmod(0o664)
         env['SHELL'] = str(noexec)
     else:
         env['SHELL'] = shell

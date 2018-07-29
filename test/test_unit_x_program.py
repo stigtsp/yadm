@@ -35,7 +35,7 @@ def test_x_program(runner, paths, program, executable, code, value, match):
     """ % (paths.pgm, paths.config, program, program.upper())
     run = runner(command=['bash'], inp=script)
 
-    print script
+    print(script)
     run.report()
     # correct exit code
     assert run.code == code

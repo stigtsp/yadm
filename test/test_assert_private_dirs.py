@@ -32,7 +32,7 @@ def test_pdirs_missing(runner, yadm_y, paths):
     for pdir in PRIVATE_DIRS:
         path = paths.work.join(pdir)
         assert path.exists()
-        assert path.stat().mode == 040700
+        assert path.stat().mode == 0o40700
 
     # confirm directories are created before command is run:
     assert re.search(
@@ -87,8 +87,8 @@ def test_pdirs_exist_apd_false(runner, yadm_y, paths):
         path = paths.work.join(pdir)
         if not path.isdir():
             path.mkdir()
-        path.chmod(0777)
-        assert path.stat().mode == 040777
+        path.chmod(0o777)
+        assert path.stat().mode == 0o40777
 
     # set configuration
     run = runner(command=yadm_y(
@@ -105,4 +105,4 @@ def test_pdirs_exist_apd_false(runner, yadm_y, paths):
     # create directories are STILL permissive
     for pdir in PRIVATE_DIRS:
         path = paths.work.join(pdir)
-        assert path.stat().mode == 040777
+        assert path.stat().mode == 0o40777

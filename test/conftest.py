@@ -48,7 +48,12 @@ class Runner(object):
             cwd=cwd,
             env=env,
         )
-        (self.out, self.err) = process.communicate(input=inp)
+        input_bytes = inp
+        if inp:
+            input_bytes = inp.encode()
+        (out_bstream, err_bstream) = process.communicate(input=input_bytes)
+        self.out = out_bstream.decode()
+        self.err = err_bstream.decode()
         self.code = process.wait()
         self.success = self.code == 0
         self.failure = self.code != 0
@@ -60,10 +65,10 @@ class Runner(object):
 
     def report(self):
         """Print code/stdout/stderr"""
-        print '%s' % self
-        print '  code:%s' % self.code
-        print '  stdout:%s' % self.out
-        print '  stderr:%s' % self.err
+        print(f'{self}')
+        print(f'  code:{self.code}')
+        print(f'  stdout:{self.out}')
+        print(f'  stderr:{self.err}')
 
 
 @pytest.fixture(scope='session')
@@ -75,7 +80,6 @@ def runner():
 @pytest.fixture(scope='session')
 def config_git(runner):
     """Configure global git configuration, if missing"""
-    print 'CONFIG-GIT-GLOBAL'
     runner(command=[
         'bash',
         '-c',
@@ -318,7 +322,6 @@ def ds1_data(tmpdir_factory, ds1_dset, runner):
 @pytest.fixture()
 def ds1_work_copy(ds1_data, paths):
     """Function scoped copy of ds1_data.work"""
-    print "COPY DS1.work"
     distutils.dir_util.copy_tree(  # pylint: disable=no-member
         str(ds1_data.work), str(paths.work))
     return None
@@ -327,7 +330,6 @@ def ds1_work_copy(ds1_data, paths):
 @pytest.fixture()
 def ds1_repo_copy(runner, ds1_data, paths):
     """Function scoped copy of ds1_data.repo"""
-    print "COPY DS1.repo"
     distutils.dir_util.copy_tree(  # pylint: disable=no-member
         str(ds1_data.repo), str(paths.repo))
     env = os.environ.copy()

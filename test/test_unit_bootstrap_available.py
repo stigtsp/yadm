@@ -9,14 +9,14 @@ def test_bootstrap_missing(runner, paths):
 def test_bootstrap_no_exec(runner, paths):
     """Test result of bootstrap_available, when bootstrap not executable"""
     paths.bootstrap.write('')
-    paths.bootstrap.chmod(0644)
+    paths.bootstrap.chmod(0o644)
     run_test(runner, paths, 1)
 
 
 def test_bootstrap_exec(runner, paths):
     """Test result of bootstrap_available, when bootstrap executable"""
     paths.bootstrap.write('')
-    paths.bootstrap.chmod(0775)
+    paths.bootstrap.chmod(0o775)
     run_test(runner, paths, 0)
 
 
@@ -28,6 +28,6 @@ def run_test(runner, paths, expected_code):
         bootstrap_available
     """ % (paths.pgm, paths.bootstrap)
     run = runner(command=['bash'], inp=script)
-    print script
+    print(script)
     run.report()
     assert run.code == expected_code

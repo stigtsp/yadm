@@ -32,7 +32,7 @@ def test_set_operating_system(
         echo $OPERATING_SYSTEM
     """ % (paths.pgm, proc_version)
     run = runner(command=['bash'], inp=script)
-    print script
+    print(script)
     run.report()
     if expected_os == 'uname':
         expected_os = uname

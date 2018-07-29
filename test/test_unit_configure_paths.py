@@ -73,7 +73,7 @@ def run_test(runner, paths, args, expected_matches, expected_code=0):
         declare -p | grep -E '(YADM|GIT)_'
     """ % (HOME, paths.pgm, argstring)
     run = runner(command=['bash'], inp=script)
-    print script
+    print(script)
     run.report()
     assert run.code == expected_code
     for match in expected_matches:

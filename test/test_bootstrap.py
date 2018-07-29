@@ -23,7 +23,7 @@ def test_bootstrap(
             'echo %s\n'
             'exit %s\n' % (expect, code)
         )
-        paths.bootstrap.chmod(0775)
+        paths.bootstrap.chmod(0o775)
     run = runner(command=yadm_y('bootstrap'))
     run.report()
     assert run.code == code

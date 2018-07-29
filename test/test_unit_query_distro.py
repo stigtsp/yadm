@@ -13,7 +13,7 @@ def test_lsb_release_present(runner, yadm, distro):
         query_distro
     """ % (yadm)
     run = runner(command=['bash'], inp=script)
-    print script
+    print(script)
     run.report()
     assert run.success
     assert run.out.rstrip() == distro
@@ -27,7 +27,7 @@ def test_lsb_release_missing(runner, yadm):
         query_distro
     """ % (yadm)
     run = runner(command=['bash'], inp=script)
-    print script
+    print(script)
     run.report()
     assert run.success
     assert run.out.rstrip() == ''
