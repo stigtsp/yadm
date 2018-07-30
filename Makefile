@@ -72,4 +72,4 @@ sync-clock:
 .env:
 	virtualenv --python=python3 .env
 	.env/bin/pip3 install --upgrade pip setuptools
-	.env/bin/pip3 install --upgrade pytest testinfra pylint==1.9.2 flake8==3.5.0
+	.env/bin/pip3 install --upgrade pytest pylint==1.9.2 flake8==3.5.0
