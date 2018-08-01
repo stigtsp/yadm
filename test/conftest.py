@@ -95,6 +95,21 @@ def config_git(runner):
     return None
 
 
+@pytest.fixture()
+def repo_config(runner, paths):
+    """Function to query a yadm repo configuration value"""
+
+    def query_func(key):
+        """Query a yadm repo configuration value"""
+        run = runner(
+            command=('git', 'config', '--local', key),
+            env={'GIT_DIR': paths.repo}
+            )
+        return run.out.rstrip()
+
+    return query_func
+
+
 @pytest.fixture(scope='session')
 def yadm():
     """Path to yadm program to be tested"""
