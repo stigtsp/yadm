@@ -33,8 +33,14 @@ def test_init(
     # these tests will assume this for $HOME
     home = str(paths.root.mkdir('HOME'))
 
-    # ds1_work_copy comes WITH a repo present
-    if not repo_present:
+    # ds1_work_copy comes WITH an empty repo dir present.
+    old_repo = paths.repo.join('old_repo')
+    if repo_present:
+        # Let's put some data in it, so we can confirm that data is gone when
+        # forced to be overwritten.
+        old_repo.write('old repo data')
+        assert old_repo.isfile()
+    else:
         paths.repo.remove()
 
     # command args
@@ -51,9 +57,13 @@ def test_init(
     if repo_present and not force:
         assert run.code == 1
         assert 'repo already exists' in run.out
+        assert old_repo.isfile(), 'Missing original repo'
     else:
         assert run.code == 0
         assert 'Initialized empty shared Git repository' in run.out
+
+        if repo_present:
+            assert not old_repo.isfile(), 'Original repo still exists'
 
         if alt_work:
             assert repo_config('core.worktree') == paths.work
