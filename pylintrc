@@ -1,9 +1,10 @@
 [BASIC]
 good-names=pytestmark
-max-args=7
 
 [DESIGN]
+max-args=9
 max-attributes=8
+max-statements=60
 
 [MESSAGES CONTROL]
 disable=redefined-outer-name
