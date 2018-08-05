@@ -1,6 +1,9 @@
 """Test clone"""
 import pytest
 
+BOOTSTRAP_MSG = 'Bootstrap successful'
+BOOTSTRAP_CODE = 123
+
 
 @pytest.mark.usefixtures('remote')
 @pytest.mark.parametrize(
@@ -57,12 +60,7 @@ def test_clone(
         assert 'Git repo already exists' in run.out
     else:
         # clone should succeed, and repo should be configured properly
-        assert run.code == 0
-        assert 'Initialized' in run.out
-        assert paths.repo.stat().mode == 0o42700
-        assert repo_config('core.bare') == 'false'
-        assert repo_config('status.showUntrackedFiles') == 'no'
-        assert repo_config('yadm.managed') == 'true'
+        assert successful_clone(run, paths, repo_config)
 
         # ensure conflicts are handled properly
         if conflicts:
@@ -105,14 +103,70 @@ def test_clone(
             assert old_repo.exists()
 
 
-# "Command 'clone' (force bootstrap, missing)"
-# "Command 'clone' (force bootstrap, existing)"
-# "Command 'clone' (prevent bootstrap)"
-# "Command 'clone' (existing bootstrap, answer n)"
-# "Command 'clone' (existing bootstrap, answer y)"
-def test_clone_bootstrap():
+@pytest.mark.usefixtures('remote')
+@pytest.mark.parametrize(
+    'bs_exists, bs_param, answer', [
+        (False, '--bootstrap', None),
+        (True, '--bootstrap', None),
+        (True, '--no-bootstrap', None),
+        (True, None, 'n'),
+        (True, None, 'y'),
+    ], ids=[
+        'force, missing',
+        'force, existing',
+        'prevent',
+        'existing, answer n',
+        'existing, answer y',
+    ])
+def test_clone_bootstrap(
+        runner, paths, yadm_y, repo_config, bs_exists, bs_param, answer):
     """Test bootstrap clone features"""
-    pytest.skip('Not implemented')
+
+    # establish a bootstrap
+    create_bootstrap(paths, bs_exists)
+
+    # run the clone command
+    args = ['clone', '-w', paths.work]
+    if bs_param:
+        args += [bs_param]
+    args += [f'file://{paths.remote}']
+    expect = []
+    if answer:
+        expect.append(('Would you like to execute it now', answer))
+    run = runner(command=yadm_y(*args), expect=expect)
+    run.report()
+
+    if answer:
+        assert 'Would you like to execute it now' in run.out
+
+    expected_code = 0
+    if bs_exists and bs_param != '--no-bootstrap':
+        expected_code = BOOTSTRAP_CODE
+
+    if answer == 'y':
+        expected_code = BOOTSTRAP_CODE
+        assert BOOTSTRAP_MSG in run.out
+    elif answer == 'n':
+        expected_code = 0
+        assert BOOTSTRAP_MSG not in run.out
+
+    assert successful_clone(run, paths, repo_config, expected_code)
+
+    if not bs_exists:
+        assert BOOTSTRAP_MSG not in run.out
+
+
+def create_bootstrap(paths, exists):
+    """Create bootstrap file for test"""
+    if exists:
+        paths.bootstrap.write(
+            '#!/bin/sh\n'
+            f'echo {BOOTSTRAP_MSG}\n'
+            f'exit {BOOTSTRAP_CODE}\n')
+        paths.bootstrap.chmod(0o775)
+        assert paths.bootstrap.exists()
+    else:
+        assert not paths.bootstrap.exists()
 
 
 # "Command 'clone' (local insecure .ssh and .gnupg data, no rltd data in repo)"
@@ -123,6 +177,17 @@ def test_clone_bootstrap():
 def test_clone_perms():
     """Test clone permission related functions"""
     pytest.skip('Not implemented')
+
+
+def successful_clone(run, paths, repo_config, expected_code=0):
+    """Assert clone is successful"""
+    assert run.code == expected_code
+    assert 'Initialized' in run.out
+    assert paths.repo.stat().mode == 0o42700
+    assert repo_config('core.bare') == 'false'
+    assert repo_config('status.showUntrackedFiles') == 'no'
+    assert repo_config('yadm.managed') == 'true'
+    return True
 
 
 @pytest.fixture()
