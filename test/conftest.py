@@ -35,10 +35,12 @@ class Runner(object):
             shell=False,
             cwd=None,
             env=None,
+            expect=None,
             label=None):
         self.label = label
         self.command = command
         self.inp = inp
+        self.wrap(expect)
         process = Popen(
             self.command,
             stdin=PIPE,
@@ -48,9 +50,9 @@ class Runner(object):
             cwd=cwd,
             env=env,
         )
-        input_bytes = inp
-        if inp:
-            input_bytes = inp.encode()
+        input_bytes = self.inp
+        if self.inp:
+            input_bytes = self.inp.encode()
         (out_bstream, err_bstream) = process.communicate(input=input_bytes)
         self.out = out_bstream.decode()
         self.err = err_bstream.decode()
@@ -69,6 +71,26 @@ class Runner(object):
         print(f'  code:{self.code}')
         print(f'  stdout:{self.out}')
         print(f'  stderr:{self.err}')
+
+    def wrap(self, expect):
+        """Wrap command with expect"""
+        if not expect:
+            return
+        cmdline = ' '.join([f'"{w}"' for w in self.command])
+        expect_script = f'set timeout 2\nspawn {cmdline}\n'
+        for question, answer in expect:
+            expect_script += (
+                'expect {\n'
+                f'"{question}" {{send "{answer}\\r"}}\n'
+                'timeout {close;exit 128}\n'
+                '}\n')
+        expect_script += (
+            'expect eof\n'
+            'foreach {pid spawnid os_error_flag value} [wait] break\n'
+            'exit $value')
+        self.inp = expect_script
+        print(f'EXPECT:{expect_script}')
+        self.command = ['expect']
 
 
 @pytest.fixture(scope='session')
