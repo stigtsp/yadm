@@ -1,4 +1,6 @@
 """Test clone"""
+import os
+import re
 import pytest
 
 BOOTSTRAP_MSG = 'Bootstrap successful'
@@ -169,14 +171,80 @@ def create_bootstrap(paths, exists):
         assert not paths.bootstrap.exists()
 
 
-# "Command 'clone' (local insecure .ssh and .gnupg data, no rltd data in repo)"
-# "Command 'clone' (local insecure .gnupg data, related data in repo)"
-# "Command 'clone' (local insecure .ssh data, related data in repo)"
-# "Command 'clone' (no existing .gnupg, .gnupg data tracked in repo)"
-# "Command 'clone' (no existing .ssh, .ssh data tracked in repo)"
-def test_clone_perms():
+@pytest.mark.usefixtures('remote')
+@pytest.mark.parametrize(
+    'private_type, in_repo, in_work', [
+        ('ssh', False, True),
+        ('gnupg', False, True),
+        ('ssh', True, True),
+        ('gnupg', True, True),
+        ('ssh', True, False),
+        ('gnupg', True, False),
+    ], ids=[
+        'open ssh, not tracked',
+        'open gnupg, not tracked',
+        'open ssh, tracked',
+        'open gnupg, tracked',
+        'missing ssh, tracked',
+        'missing gnupg, tracked',
+    ])
+def test_clone_perms(
+        runner, yadm_y, paths, repo_config,
+        private_type, in_repo, in_work):
     """Test clone permission related functions"""
-    pytest.skip('Not implemented')
+
+    # update remote repo to include private data
+    if in_repo:
+        rpath = paths.work.mkdir(f'.{private_type}').join('related')
+        rpath.write('related')
+        os.system(f'GIT_DIR="{paths.remote}" git add {rpath}')
+        os.system(f'GIT_DIR="{paths.remote}" git commit -m "{rpath}"')
+        rpath.remove()
+
+    # ensure local private data is insecure at the start
+    if in_work:
+        pdir = paths.work.join(f'.{private_type}')
+        if not pdir.exists():
+            pdir.mkdir()
+        pfile = pdir.join('existing')
+        pfile.write('existing')
+        pdir.chmod(0o777)
+        pfile.chmod(0o777)
+    else:
+        paths.work.remove()
+        paths.work.mkdir()
+
+    run = runner(
+        yadm_y('clone', '-d', '-w', paths.work, f'file://{paths.remote}'))
+    run.report()
+
+    assert successful_clone(run, paths, repo_config)
+    if in_work:
+        # private directories which already exist, should be left as they are,
+        # which in this test is "insecure".
+        assert re.search(
+            f'initial private dir perms drwxrwxrwx.+.{private_type}',
+            run.out)
+        assert re.search(
+            f'pre-merge private dir perms drwxrwxrwx.+.{private_type}',
+            run.out)
+        assert re.search(
+            f'post-merge private dir perms drwxrwxrwx.+.{private_type}',
+            run.out)
+    else:
+        # private directories which are created, should be done prior to
+        # merging, and with secure permissions.
+        assert 'initial private dir perms' not in run.out
+        assert re.search(
+            f'pre-merge private dir perms drwx------.+.{private_type}',
+            run.out)
+        assert re.search(
+            f'post-merge private dir perms drwx------.+.{private_type}',
+            run.out)
+
+    # standard perms still apply afterwards unless disabled with auto.perms
+    assert paths.work.join(f'.{private_type}').stat().mode == 0o40700, (
+        f'.{private_type} has not been secured by auto.perms')
 
 
 def successful_clone(run, paths, repo_config, expected_code=0):

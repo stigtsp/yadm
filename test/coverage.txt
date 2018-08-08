@@ -13,7 +13,7 @@ Track which tests have been implemented using pytest
 [✓] test/102_accept_clean.bats
 [✓] test/103_accept_git.bats
 [✓] test/104_accept_init.bats
-[ ] test/105_accept_clone.bats
+[✓] test/105_accept_clone.bats
 [ ] test/106_accept_config.bats
 [✓] test/107_accept_list.bats
 [ ] test/108_accept_alt.bats

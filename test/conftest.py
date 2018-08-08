@@ -226,6 +226,7 @@ class DataSet(object):
         self.__files = list()
         self.__dirs = list()
         self.__tracked_dirs = list()
+        self.__private_dirs = list()
         self.__relpath = None
 
     def __repr__(self):
@@ -283,6 +284,11 @@ class DataSet(object):
         """List of directories in DataSet not starting with '.'"""
         return [d for d in self.__tracked_dirs if not d.startswith('.')]
 
+    @property
+    def private_dirs(self):
+        """List of directories in DataSet considered 'private'"""
+        return list(self.__private_dirs)
+
     def add_file(self, path, tracked=True, private=False):
         """Add file to data set"""
         if path not in self:
@@ -296,6 +302,8 @@ class DataSet(object):
             self.__dirs.append(dname)
             if tracked:
                 self.__tracked_dirs.append(dname)
+            if private:
+                self.__private_dirs.append(dname)
 
     def relative_to(self, relpath):
         """Update all relative paths to this py.path"""
@@ -314,7 +322,7 @@ def ds1_dset():
     dset.add_file('u1', tracked=False)
     dset.add_file('d2/u2', tracked=False)
     dset.add_file('.ssh/p1', tracked=False, private=True)
-    dset.add_file('.ssh/p2', tracked=False, private=True)
+    dset.add_file('.ssh/.p2', tracked=False, private=True)
     dset.add_file('.gnupg/p3', tracked=False, private=True)
     dset.add_file('.gnupg/.p4', tracked=False, private=True)
     return dset
