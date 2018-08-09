@@ -14,7 +14,7 @@ Track which tests have been implemented using pytest
 [✓] test/103_accept_git.bats
 [✓] test/104_accept_init.bats
 [✓] test/105_accept_clone.bats
-[ ] test/106_accept_config.bats
+[✓] test/106_accept_config.bats
 [✓] test/107_accept_list.bats
 [ ] test/108_accept_alt.bats
 [ ] test/109_accept_encryption.bats
@@ -27,4 +27,9 @@ Track which tests have been implemented using pytest
 [ ] test/116_accept_cygwin_copy.bats
 [ ] test/117_accept_hooks.bats
 [✓] test/118_accept_assert_private_dirs.bats
+
 [ ] improved yadm enter tests for variable shells
+[ ] examine use of os.system vs runner
+[ ] drive introspect tests with fixtures like supported_configs()
+[ ] review inspections of run.out, for additional tests of run.err
+[ ] unify ordering of code/err/out assertions

@@ -25,6 +25,32 @@ def flake8_version():
     return '3.5.0'
 
 
+@pytest.fixture(scope='session')
+def supported_configs():
+    """List of supported config options"""
+    return [
+        'local.class',
+        'local.hostname',
+        'local.os',
+        'local.user',
+        'yadm.auto-alt',
+        'yadm.auto-perms',
+        'yadm.auto-private-dirs',
+        'yadm.cygwin-copy',
+        'yadm.git-program',
+        'yadm.gpg-perms',
+        'yadm.gpg-program',
+        'yadm.gpg-recipient',
+        'yadm.ssh-perms',
+        ]
+
+
+@pytest.fixture(scope='session')
+def supported_local_configs(supported_configs):
+    """List of supported local config options"""
+    return [c for c in supported_configs if c.startswith('local.')]
+
+
 class Runner(object):
     """Class for running commands"""
 
