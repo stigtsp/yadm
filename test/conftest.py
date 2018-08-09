@@ -26,6 +26,28 @@ def flake8_version():
 
 
 @pytest.fixture(scope='session')
+def supported_commands():
+    """List of supported commands"""
+    return [
+        'alt',
+        'bootstrap',
+        'clean',
+        'clone',
+        'config',
+        'decrypt',
+        'encrypt',
+        'enter',
+        'gitconfig',
+        'help',
+        'init',
+        'introspect',
+        'list',
+        'perms',
+        'version',
+        ]
+
+
+@pytest.fixture(scope='session')
 def supported_configs():
     """List of supported config options"""
     return [
@@ -42,6 +64,20 @@ def supported_configs():
         'yadm.gpg-program',
         'yadm.gpg-recipient',
         'yadm.ssh-perms',
+        ]
+
+
+@pytest.fixture(scope='session')
+def supported_switches():
+    """List of supported switches"""
+    return [
+        '--yadm-archive',
+        '--yadm-bootstrap',
+        '--yadm-config',
+        '--yadm-dir',
+        '--yadm-encrypt',
+        '--yadm-repo',
+        '-Y',
         ]
 
 

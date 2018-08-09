@@ -1,18 +1,10 @@
 """Test introspect"""
-import re
 import pytest
 
 
 @pytest.mark.parametrize(
-    'name, code, count, regex', [
-        ('', 0, 0, None),
-        ('invalid', 0, 0, None),
-        ('commands', 0, 15, r'version'),
-        ('configs', 0, 13, r'yadm\.auto-alt'),
-        ('repo', 0, 1, 'MATCHREPO'),
-        ('switches', 0, 7, r'--yadm-dir'),
-    ], ids=[
-        'none',
+    'name', [
+        '',
         'invalid',
         'commands',
         'configs',
@@ -20,19 +12,32 @@ import pytest
         'switches',
     ])
 def test_introspect_category(
-        runner, yadm_y, paths, name, code, count, regex):
+        runner, yadm_y, paths, name,
+        supported_commands, supported_configs, supported_switches):
     """Validate introspection category"""
     if name:
         run = runner(command=yadm_y('introspect', name))
     else:
         run = runner(command=yadm_y('introspect'))
     run.report()
-    assert run.code == code
-    if regex == 'MATCHREPO':
-        assert run.out.rstrip() == paths.repo
-    elif regex:
-        assert re.search(regex, run.out)
-    else:
+
+    assert run.code == 0
+    assert run.err == ''
+
+    expected = []
+    if name == 'commands':
+        expected = supported_commands
+    elif name == 'config':
+        expected = supported_configs
+    elif name == 'switches':
+        expected = supported_switches
+
+    # assert values
+    if name in ('', 'invalid'):
         assert run.out == ''
-    assert len(run.out.split()) == count, (
-        "unexpected number of intropected values")
+    if name == 'repo':
+        assert run.out.rstrip() == paths.repo
+    for value in expected:
+        assert value in run.out
+    if expected:
+        assert len(run.out.split()) == len(expected)
