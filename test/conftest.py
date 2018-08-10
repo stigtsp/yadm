@@ -209,6 +209,7 @@ def paths(tmpdir, yadm):
     dir_work = dir_root.mkdir('work')
     dir_yadm = dir_root.mkdir('yadm')
     dir_repo = dir_yadm.mkdir('repo.git')
+    dir_hooks = dir_yadm.mkdir('hooks')
     dir_remote = dir_root.mkdir('remote')
     file_config = dir_yadm.join('config')
     file_bootstrap = dir_yadm.join('bootstrap')
@@ -219,6 +220,7 @@ def paths(tmpdir, yadm):
             'work',
             'yadm',
             'repo',
+            'hooks',
             'remote',
             'config',
             'bootstrap',
@@ -229,6 +231,7 @@ def paths(tmpdir, yadm):
         dir_work,
         dir_yadm,
         dir_repo,
+        dir_hooks,
         dir_remote,
         file_config,
         file_bootstrap,

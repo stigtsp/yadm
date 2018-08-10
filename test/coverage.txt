@@ -25,7 +25,7 @@ Track which tests have been implemented using pytest
 [✓] test/114_accept_enter.bats
 [✓] test/115_accept_introspect.bats
 [ ] test/116_accept_cygwin_copy.bats
-[ ] test/117_accept_hooks.bats
+[✓] test/117_accept_hooks.bats
 [✓] test/118_accept_assert_private_dirs.bats
 
 [ ] improved yadm enter tests for variable shells
