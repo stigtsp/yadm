@@ -7,7 +7,7 @@ Track which tests have been implemented using pytest
 [✓] test/004_unit_bootstrap_available.bats
 [✓] test/005_unit_set_operating_system.bats
 [✓] test/006_unit_query_distro.bats
-[ ] test/007_unit_parse_encrypt.bats
+[✓] test/007_unit_parse_encrypt.bats
 [✓] test/100_accept_version.bats
 [✓] test/101_accept_help.bats
 [✓] test/102_accept_clean.bats
@@ -33,3 +33,4 @@ Track which tests have been implemented using pytest
 [✓] drive introspect tests with fixtures like supported_configs()
 [ ] review inspections of run.out, for additional tests of run.err
 [ ] unify ordering of code/err/out assertions
+[ ] review all tests, improve comments for anything unclear

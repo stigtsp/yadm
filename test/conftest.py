@@ -213,6 +213,7 @@ def paths(tmpdir, yadm):
     dir_remote = dir_root.mkdir('remote')
     file_config = dir_yadm.join('config')
     file_bootstrap = dir_yadm.join('bootstrap')
+    file_encrypt = dir_yadm.join('encrypt')
     paths = collections.namedtuple(
         'Paths', [
             'pgm',
@@ -224,6 +225,7 @@ def paths(tmpdir, yadm):
             'remote',
             'config',
             'bootstrap',
+            'encrypt',
             ])
     return paths(
         yadm,
@@ -235,6 +237,7 @@ def paths(tmpdir, yadm):
         dir_remote,
         file_config,
         file_bootstrap,
+        file_encrypt,
         )
 
 
