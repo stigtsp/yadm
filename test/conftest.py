@@ -1,8 +1,10 @@
 """Global tests configuration"""
 import collections
+import copy
 import distutils.dir_util  # pylint: disable=no-name-in-module,import-error
 import os
-import copy
+import platform
+import pwd
 from subprocess import Popen, PIPE
 import pytest
 
@@ -23,6 +25,42 @@ def pylint_version():
 def flake8_version():
     """Version of flake8 supported"""
     return '3.5.0'
+
+
+@pytest.fixture(scope='session')
+def tst_user():
+    """Test session's user id"""
+    return pwd.getpwuid(os.getuid()).pw_name
+
+
+@pytest.fixture(scope='session')
+def tst_host():
+    """Test session's short hostname value"""
+    return platform.node().split('.')[0]
+
+
+@pytest.fixture(scope='session')
+def tst_distro(runner):
+    """Test session's distro"""
+    distro = ''
+    try:
+        run = runner(command=['lsb_release', '-si'])
+        distro = run.out.strip()
+    except BaseException:
+        pass
+    return distro
+
+
+@pytest.fixture(scope='session')
+def tst_sys():
+    """Test session's uname value"""
+    return platform.system()
+
+
+@pytest.fixture(scope='session')
+def cygwin_sys():
+    """CYGWIN uname id"""
+    return 'CYGWIN_NT-6.1-WOW64'
 
 
 @pytest.fixture(scope='session')
@@ -382,11 +420,13 @@ class DataSet(object):
 
 
 @pytest.fixture(scope='session')
-def ds1_dset():
+def ds1_dset(tst_sys, cygwin_sys):
     """Meta-data for dataset one files"""
     dset = DataSet()
     dset.add_file('t1')
     dset.add_file('d1/t2')
+    dset.add_file(f'alt-test##{tst_sys}')
+    dset.add_file(f'alt-test##{cygwin_sys}')
     dset.add_file('u1', tracked=False)
     dset.add_file('d2/u2', tracked=False)
     dset.add_file('.ssh/p1', tracked=False, private=True)
@@ -476,10 +516,3 @@ def ds1(ds1_work_copy, paths, ds1_dset):
     dscopy = copy.deepcopy(ds1_dset)
     dscopy.relative_to(copy.deepcopy(paths.work))
     return dscopy
-
-
-@pytest.fixture(scope='session')
-def distro(runner):
-    """Distro of test system"""
-    run = runner(command=['lsb_release', '-si'])
-    return run.out.rstrip()

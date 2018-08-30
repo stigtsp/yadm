@@ -24,7 +24,7 @@ Track which tests have been implemented using pytest
 [ ] test/113_accept_jinja_alt.bats
 [✓] test/114_accept_enter.bats
 [✓] test/115_accept_introspect.bats
-[ ] test/116_accept_cygwin_copy.bats
+[✓] test/116_accept_cygwin_copy.bats
 [✓] test/117_accept_hooks.bats
 [✓] test/118_accept_assert_private_dirs.bats
 
