@@ -33,8 +33,8 @@ def test_cygwin_copy(
     if setting is not None:
         os.system(' '.join(yadm_y('config', 'yadm.cygwin-copy', str(setting))))
 
-    expected_content = f'alt-test##{tst_sys}'
-    alt_path = paths.work.join('alt-test')
+    expected_content = f'test_cygwin_copy##{tst_sys}'
+    alt_path = paths.work.join('test_cygwin_copy')
     if pre_existing == 'symlink':
         alt_path.mklinkto(expected_content)
     elif pre_existing == 'file':
@@ -45,7 +45,7 @@ def test_cygwin_copy(
         uname = uname_path.join('uname')
         uname.write(f'#!/bin/sh\necho "{cygwin_sys}"\n')
         uname.chmod(0o777)
-        expected_content = f'alt-test##{cygwin_sys}'
+        expected_content = f'test_cygwin_copy##{cygwin_sys}'
     env = os.environ.copy()
     env['PATH'] = ':'.join([str(uname_path), env['PATH']])
 
