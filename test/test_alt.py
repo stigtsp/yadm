@@ -1,0 +1,119 @@
+"""Test alt"""
+import os
+import pytest
+
+# coverage:
+# [X] test untracked/unencrypted file linking
+# [X] test tracked file linking
+# [X] test encrypt entry linking
+# [ ] test overrides with local.os, local.hostname, local.user
+# [ ] test range of classes (upper/lower case)
+# [ ] test auto-alt settings (using the yadm status command)
+# [X] test precedence (parametrize over an index, creating valid matching
+#     suffixes, ensuring the highest precedence is linked
+
+# [ ] test delimiter "_" does not work
+# [ ] test recursion
+# [X] test spaces in file names
+# [X] test spaces in directory names
+
+# precedence for matching:
+#   ##
+#   ##OS
+#   ##OS.HOSTNAME
+#   ##OS.HOSTNAME.USER
+#   ##CLASS
+#   ##CLASS.OS
+#   ##CLASS.OS.HOSTNAME
+#   ##CLASS.OS.HOSTNAME.USER
+
+# PROBABLY: staticly define bogus files in data set, and then add positive
+# test case during each test
+
+FILE1 = 'test_alt'
+FILE2 = 'test alt/test_alt'
+
+
+@pytest.mark.parametrize(
+    'precedence_index', range(8))
+@pytest.mark.parametrize(
+    'tracked, encrypt', [
+        (False, False),
+        (True, False),
+        (False, True),
+    ], ids=[
+        'untracked',
+        'tracked',
+        'encrypted',
+    ])
+@pytest.mark.usefixtures('ds1_copy')
+def test_alt(runner, yadm_y, paths,
+             tst_sys, tst_host, tst_user,
+             tracked, encrypt,
+             precedence_index):
+    """Test alternate linking"""
+
+    # set the class
+    tst_class = 'testclass'
+    os.system(
+        f'GIT_DIR={str(paths.repo)} '
+        f'git config --local local.class "{tst_class}"'
+    )
+
+    # define the expected precedence of suffix
+    precedence = [
+        f'##',
+        f'##{tst_sys}',
+        f'##{tst_sys}.{tst_host}',
+        f'##{tst_sys}.{tst_host}.{tst_user}',
+        f'##{tst_class}',
+        f'##{tst_class}.{tst_sys}',
+        f'##{tst_class}.{tst_sys}.{tst_host}',
+        f'##{tst_class}.{tst_sys}.{tst_host}.{tst_user}',
+    ]
+
+    # create files using a subset of files
+    for suffix in precedence[0:precedence_index+1]:
+        create_files(paths, suffix, tracked=tracked, encrypt=encrypt)
+
+    # run alt to trigger linking
+    run = runner(yadm_y('alt'))
+    run.report()
+    assert run.code == 0
+
+    # assert the proper linking has occurred
+    for file_path in (FILE1, FILE2):
+        if tracked or encrypt:
+            assert paths.work.join(file_path).islink()
+            assert paths.work.join(file_path).read() == (
+                file_path + precedence[precedence_index])
+        else:
+            assert not paths.work.join(file_path).exists()
+
+
+def create_files(paths, suffix, preserve=False, tracked=True, encrypt=False):
+    """Create new file, and add to the repo"""
+
+    if not preserve:
+        if paths.work.join(FILE1).exists():
+            paths.work.join(FILE1).remove(rec=1, ignore_errors=True)
+            assert not paths.work.join(FILE1).exists()
+        if paths.work.join(FILE2).exists():
+            paths.work.join(FILE2).remove(rec=1, ignore_errors=True)
+            assert not paths.work.join(FILE2).exists()
+
+    new_file1 = paths.work.join(FILE1 + suffix)
+    new_file1.write(FILE1 + suffix, ensure=True)
+    new_file2 = paths.work.join(FILE2 + suffix)
+    new_file2.write(FILE2 + suffix, ensure=True)
+    assert new_file1.exists()
+    assert new_file2.exists()
+
+    if tracked:
+        for path in (new_file1, new_file2):
+            os.system(f'GIT_DIR={str(paths.repo)} git add "{path}"')
+        os.system(f'GIT_DIR={str(paths.repo)} git commit -m "Add test files"')
+
+    if encrypt:
+        paths.encrypt.write(f'{FILE1 + suffix}\n', mode='a')
+        paths.encrypt.write(f'{FILE2 + suffix}\n', mode='a')
