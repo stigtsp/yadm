@@ -6,7 +6,7 @@ import pytest
 # [X] test untracked/unencrypted file linking
 # [X] test tracked file linking
 # [X] test encrypt entry linking
-# [ ] test overrides with local.os, local.hostname, local.user
+# [X] test overrides with local.os, local.hostname, local.user
 # [ ] test range of classes (upper/lower case)
 # [ ] test auto-alt settings (using the yadm status command)
 # [X] test precedence (parametrize over an index, creating valid matching
@@ -55,10 +55,7 @@ def test_alt(runner, yadm_y, paths,
 
     # set the class
     tst_class = 'testclass'
-    os.system(
-        f'GIT_DIR={str(paths.repo)} '
-        f'git config --local local.class "{tst_class}"'
-    )
+    set_local(paths, 'class', tst_class)
 
     # define the expected precedence of suffix
     precedence = [
@@ -89,6 +86,42 @@ def test_alt(runner, yadm_y, paths,
                 file_path + precedence[precedence_index])
         else:
             assert not paths.work.join(file_path).exists()
+
+
+@pytest.mark.usefixtures('ds1_copy')
+def test_local_override(runner, yadm_y, paths,
+                        tst_sys, tst_host, tst_user):
+    """Test local overrides"""
+
+    # define local overrides
+    set_local(paths, 'class', 'or-class')
+    set_local(paths, 'hostname', 'or-hostname')
+    set_local(paths, 'os', 'or-os')
+    set_local(paths, 'user', 'or-user')
+
+    # create files, the first would normally be the most specific version
+    # however, the second is the overridden version which should be preferred.
+    create_files(paths, f'##or-class.{tst_sys}.{tst_host}.{tst_user}')
+    create_files(paths, '##or-class.or-os.or-hostname.or-user')
+
+    # run alt to trigger linking
+    run = runner(yadm_y('alt'))
+    run.report()
+    assert run.code == 0
+
+    # assert the proper linking has occurred
+    for file_path in (FILE1, FILE2):
+        assert paths.work.join(file_path).islink()
+        assert paths.work.join(file_path).read() == (
+            file_path + '##or-class.or-os.or-hostname.or-user')
+
+
+def set_local(paths, variable, value):
+    """Set local override"""
+    os.system(
+        f'GIT_DIR={str(paths.repo)} '
+        f'git config --local "local.{variable}" "{value}"'
+    )
 
 
 def create_files(paths, suffix, preserve=False, tracked=True, encrypt=False):
