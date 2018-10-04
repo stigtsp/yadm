@@ -7,7 +7,7 @@ import pytest
 # [X] test tracked file linking
 # [X] test encrypt entry linking
 # [X] test overrides with local.os, local.hostname, local.user
-# [ ] test range of classes (upper/lower case)
+# [X] test range of classes (upper/lower case)
 # [ ] test auto-alt settings (using the yadm status command)
 # [X] test precedence (parametrize over an index, creating valid matching
 #     suffixes, ensuring the highest precedence is linked
@@ -31,7 +31,7 @@ import pytest
 # test case during each test
 
 FILE1 = 'test_alt'
-FILE2 = 'test alt/test_alt'
+FILE2 = 'test alt/test alt'
 
 
 @pytest.mark.parametrize(
@@ -114,6 +114,36 @@ def test_local_override(runner, yadm_y, paths,
         assert paths.work.join(file_path).islink()
         assert paths.work.join(file_path).read() == (
             file_path + '##or-class.or-os.or-hostname.or-user')
+
+
+@pytest.mark.parametrize('suffix', ['AAA', 'ZZZ', 'aaa', 'zzz'])
+@pytest.mark.usefixtures('ds1_copy')
+def test_class_case(runner, yadm_y, paths, tst_sys, suffix):
+    """Test range of class cases"""
+
+    # set the class
+    set_local(paths, 'class', suffix)
+
+    # create files
+    endings = [suffix]
+    if tst_sys == 'Linux':
+        # Only create all of these side-by-side on Linux, which is
+        # unquestionably case-sensitive. This would break tests on
+        # case-insensitive systems.
+        endings = ['AAA', 'ZZZ', 'aaa', 'zzz']
+    for ending in endings:
+        create_files(paths, f'##{ending}')
+
+    # run alt to trigger linking
+    run = runner(yadm_y('alt'))
+    run.report()
+    assert run.code == 0
+
+    # assert the proper linking has occurred
+    for file_path in (FILE1, FILE2):
+        assert paths.work.join(file_path).islink()
+        assert paths.work.join(file_path).read() == (
+            file_path + f'##{suffix}')
 
 
 def set_local(paths, variable, value):
