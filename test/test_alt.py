@@ -12,7 +12,7 @@ import pytest
 # [X] test precedence (parametrize over an index, creating valid matching
 #     suffixes, ensuring the highest precedence is linked
 
-# [ ] test delimiter "_" does not work
+# [X] test delimiter "_" does not work
 # [ ] test recursion
 # [X] test exclusion
 # [X] test spaces in file names
@@ -174,6 +174,33 @@ def test_auto_alt(runner, yadm_y, paths, autoalt):
             assert paths.work.join(file_path).islink()
             assert paths.work.join(file_path).read() == (
                 file_path + '##')
+
+
+@pytest.mark.parametrize('delimiter', ['.', '_'])
+@pytest.mark.usefixtures('ds1_copy')
+def test_delimiter(runner, yadm_y, paths,
+                   tst_sys, tst_host, tst_user, delimiter):
+    """Test delimiters used"""
+
+    suffix = '##' + delimiter.join([tst_sys, tst_host, tst_user])
+
+    # create file
+    create_files(paths, suffix)
+
+    # run alt to trigger linking
+    run = runner(yadm_y('alt'))
+    run.report()
+    assert run.code == 0
+
+    # assert the proper linking has occurred
+    # only a delimieter of '.' is valid
+    for file_path in (FILE1, FILE2):
+        if delimiter == '.':
+            assert paths.work.join(file_path).islink()
+            assert paths.work.join(file_path).read() == (
+                file_path + suffix)
+        else:
+            assert not paths.work.join(file_path).exists()
 
 
 def set_local(paths, variable, value):
