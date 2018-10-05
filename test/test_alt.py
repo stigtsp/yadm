@@ -8,7 +8,7 @@ import pytest
 # [X] test encrypt entry linking
 # [X] test overrides with local.os, local.hostname, local.user
 # [X] test range of classes (upper/lower case)
-# [ ] test auto-alt settings (using the yadm status command)
+# [X] test auto-alt settings (using the yadm status command)
 # [X] test precedence (parametrize over an index, creating valid matching
 #     suffixes, ensuring the highest precedence is linked
 
@@ -34,8 +34,7 @@ FILE1 = 'test_alt'
 FILE2 = 'test alt/test alt'
 
 
-@pytest.mark.parametrize(
-    'precedence_index', range(8))
+@pytest.mark.parametrize('precedence_index', range(8))
 @pytest.mark.parametrize(
     'tracked, encrypt', [
         (False, False),
@@ -144,6 +143,33 @@ def test_class_case(runner, yadm_y, paths, tst_sys, suffix):
         assert paths.work.join(file_path).islink()
         assert paths.work.join(file_path).read() == (
             file_path + f'##{suffix}')
+
+
+@pytest.mark.parametrize('autoalt', [None, 'true', 'false'])
+@pytest.mark.usefixtures('ds1_copy')
+def test_auto_alt(runner, yadm_y, paths, autoalt):
+    """Test setting auto-alt"""
+
+    # set the value of auto-alt
+    if autoalt:
+        os.system(' '.join(yadm_y('config', 'yadm.auto-alt', autoalt)))
+
+    # create file
+    create_files(paths, f'##')
+
+    # run status to possibly trigger linking
+    run = runner(yadm_y('status'))
+    run.report()
+    assert run.code == 0
+
+    # assert the proper linking has occurred
+    for file_path in (FILE1, FILE2):
+        if autoalt == 'false':
+            assert not paths.work.join(file_path).exists()
+        else:
+            assert paths.work.join(file_path).islink()
+            assert paths.work.join(file_path).read() == (
+                file_path + '##')
 
 
 def set_local(paths, variable, value):
