@@ -14,6 +14,7 @@ import pytest
 
 # [ ] test delimiter "_" does not work
 # [ ] test recursion
+# [X] test exclusion
 # [X] test spaces in file names
 # [X] test spaces in directory names
 
@@ -36,19 +37,21 @@ FILE2 = 'test alt/test alt'
 
 @pytest.mark.parametrize('precedence_index', range(8))
 @pytest.mark.parametrize(
-    'tracked, encrypt', [
-        (False, False),
-        (True, False),
-        (False, True),
+    'tracked, encrypt, exclude', [
+        (False, False, False),
+        (True, False, False),
+        (False, True, False),
+        (False, True, True),
     ], ids=[
         'untracked',
         'tracked',
         'encrypted',
+        'excluded',
     ])
 @pytest.mark.usefixtures('ds1_copy')
 def test_alt(runner, yadm_y, paths,
              tst_sys, tst_host, tst_user,
-             tracked, encrypt,
+             tracked, encrypt, exclude,
              precedence_index):
     """Test alternate linking"""
 
@@ -70,7 +73,8 @@ def test_alt(runner, yadm_y, paths,
 
     # create files using a subset of files
     for suffix in precedence[0:precedence_index+1]:
-        create_files(paths, suffix, tracked=tracked, encrypt=encrypt)
+        create_files(paths, suffix, tracked=tracked,
+                     encrypt=encrypt, exclude=exclude)
 
     # run alt to trigger linking
     run = runner(yadm_y('alt'))
@@ -79,7 +83,7 @@ def test_alt(runner, yadm_y, paths,
 
     # assert the proper linking has occurred
     for file_path in (FILE1, FILE2):
-        if tracked or encrypt:
+        if tracked or (encrypt and not exclude):
             assert paths.work.join(file_path).islink()
             assert paths.work.join(file_path).read() == (
                 file_path + precedence[precedence_index])
@@ -180,7 +184,9 @@ def set_local(paths, variable, value):
     )
 
 
-def create_files(paths, suffix, preserve=False, tracked=True, encrypt=False):
+def create_files(paths, suffix,
+                 preserve=False, tracked=True,
+                 encrypt=False, exclude=False):
     """Create new file, and add to the repo"""
 
     if not preserve:
@@ -206,3 +212,6 @@ def create_files(paths, suffix, preserve=False, tracked=True, encrypt=False):
     if encrypt:
         paths.encrypt.write(f'{FILE1 + suffix}\n', mode='a')
         paths.encrypt.write(f'{FILE2 + suffix}\n', mode='a')
+        if exclude:
+            paths.encrypt.write(f'!{FILE1 + suffix}\n', mode='a')
+            paths.encrypt.write(f'!{FILE2 + suffix}\n', mode='a')
