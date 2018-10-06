@@ -1,35 +1,7 @@
 """Test alt"""
 import os
+import re
 import pytest
-
-# coverage:
-# [X] test untracked/unencrypted file linking
-# [X] test tracked file linking
-# [X] test encrypt entry linking
-# [X] test overrides with local.os, local.hostname, local.user
-# [X] test range of classes (upper/lower case)
-# [X] test auto-alt settings (using the yadm status command)
-# [X] test precedence (parametrize over an index, creating valid matching
-#     suffixes, ensuring the highest precedence is linked
-
-# [X] test delimiter "_" does not work
-# [ ] test recursion
-# [X] test exclusion
-# [X] test spaces in file names
-# [X] test spaces in directory names
-
-# precedence for matching:
-#   ##
-#   ##OS
-#   ##OS.HOSTNAME
-#   ##OS.HOSTNAME.USER
-#   ##CLASS
-#   ##CLASS.OS
-#   ##CLASS.OS.HOSTNAME
-#   ##CLASS.OS.HOSTNAME.USER
-
-# PROBABLY: staticly define bogus files in data set, and then add positive
-# test case during each test
 
 FILE1 = 'test_alt'
 FILE2 = 'test alt/test alt'
@@ -80,15 +52,19 @@ def test_alt(runner, yadm_y, paths,
     run = runner(yadm_y('alt'))
     run.report()
     assert run.code == 0
+    assert run.err == ''
+    linked = linked_list(run.out)
 
     # assert the proper linking has occurred
     for file_path in (FILE1, FILE2):
+        source_file = file_path + precedence[precedence_index]
         if tracked or (encrypt and not exclude):
             assert paths.work.join(file_path).islink()
-            assert paths.work.join(file_path).read() == (
-                file_path + precedence[precedence_index])
+            assert paths.work.join(file_path).read() == source_file
+            assert str(paths.work.join(source_file)) in linked
         else:
             assert not paths.work.join(file_path).exists()
+            assert str(paths.work.join(source_file)) not in linked
 
 
 @pytest.mark.usefixtures('ds1_copy')
@@ -111,12 +87,15 @@ def test_local_override(runner, yadm_y, paths,
     run = runner(yadm_y('alt'))
     run.report()
     assert run.code == 0
+    assert run.err == ''
+    linked = linked_list(run.out)
 
     # assert the proper linking has occurred
     for file_path in (FILE1, FILE2):
+        source_file = file_path + '##or-class.or-os.or-hostname.or-user'
         assert paths.work.join(file_path).islink()
-        assert paths.work.join(file_path).read() == (
-            file_path + '##or-class.or-os.or-hostname.or-user')
+        assert paths.work.join(file_path).read() == source_file
+        assert str(paths.work.join(source_file)) in linked
 
 
 @pytest.mark.parametrize('suffix', ['AAA', 'ZZZ', 'aaa', 'zzz'])
@@ -141,12 +120,15 @@ def test_class_case(runner, yadm_y, paths, tst_sys, suffix):
     run = runner(yadm_y('alt'))
     run.report()
     assert run.code == 0
+    assert run.err == ''
+    linked = linked_list(run.out)
 
     # assert the proper linking has occurred
     for file_path in (FILE1, FILE2):
+        source_file = file_path + f'##{suffix}'
         assert paths.work.join(file_path).islink()
-        assert paths.work.join(file_path).read() == (
-            file_path + f'##{suffix}')
+        assert paths.work.join(file_path).read() == source_file
+        assert str(paths.work.join(source_file)) in linked
 
 
 @pytest.mark.parametrize('autoalt', [None, 'true', 'false'])
@@ -165,15 +147,19 @@ def test_auto_alt(runner, yadm_y, paths, autoalt):
     run = runner(yadm_y('status'))
     run.report()
     assert run.code == 0
+    assert run.err == ''
+    linked = linked_list(run.out)
 
     # assert the proper linking has occurred
     for file_path in (FILE1, FILE2):
+        source_file = file_path + '##'
         if autoalt == 'false':
             assert not paths.work.join(file_path).exists()
         else:
             assert paths.work.join(file_path).islink()
-            assert paths.work.join(file_path).read() == (
-                file_path + '##')
+            assert paths.work.join(file_path).read() == source_file
+            # no linking output when run via auto-alt
+            assert str(paths.work.join(source_file)) not in linked
 
 
 @pytest.mark.parametrize('delimiter', ['.', '_'])
@@ -191,16 +177,30 @@ def test_delimiter(runner, yadm_y, paths,
     run = runner(yadm_y('alt'))
     run.report()
     assert run.code == 0
+    assert run.err == ''
+    linked = linked_list(run.out)
 
     # assert the proper linking has occurred
     # only a delimieter of '.' is valid
     for file_path in (FILE1, FILE2):
+        source_file = file_path + suffix
         if delimiter == '.':
             assert paths.work.join(file_path).islink()
-            assert paths.work.join(file_path).read() == (
-                file_path + suffix)
+            assert paths.work.join(file_path).read() == source_file
+            assert str(paths.work.join(source_file)) in linked
         else:
             assert not paths.work.join(file_path).exists()
+            assert str(paths.work.join(source_file)) not in linked
+
+
+def linked_list(output):
+    """Parse output, and return list of linked files"""
+    linked = dict()
+    for line in output.splitlines():
+        match = re.match('Linking (.+) to (.+)$', line)
+        if match:
+            linked[match.group(1)] = match.group(2)
+    return linked.keys()
 
 
 def set_local(paths, variable, value):

@@ -16,7 +16,7 @@ Track which tests have been implemented using pytest
 [✓] test/105_accept_clone.bats
 [✓] test/106_accept_config.bats
 [✓] test/107_accept_list.bats
-[ ] test/108_accept_alt.bats
+[✓] test/108_accept_alt.bats
 [ ] test/109_accept_encryption.bats
 [ ] test/110_accept_perms.bats
 [ ] test/111_accept_wildcard_alt.bats

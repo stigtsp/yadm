@@ -3,6 +3,7 @@ good-names=pytestmark
 
 [DESIGN]
 max-args=10
+max-locals=17
 max-attributes=8
 max-statements=65
 
