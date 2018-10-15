@@ -249,8 +249,9 @@ def paths(tmpdir, yadm):
     dir_repo = dir_yadm.mkdir('repo.git')
     dir_hooks = dir_yadm.mkdir('hooks')
     dir_remote = dir_root.mkdir('remote')
-    file_config = dir_yadm.join('config')
+    file_archive = dir_yadm.join('files.gpg')
     file_bootstrap = dir_yadm.join('bootstrap')
+    file_config = dir_yadm.join('config')
     file_encrypt = dir_yadm.join('encrypt')
     paths = collections.namedtuple(
         'Paths', [
@@ -261,8 +262,9 @@ def paths(tmpdir, yadm):
             'repo',
             'hooks',
             'remote',
-            'config',
+            'archive',
             'bootstrap',
+            'config',
             'encrypt',
             ])
     return paths(
@@ -273,8 +275,9 @@ def paths(tmpdir, yadm):
         dir_repo,
         dir_hooks,
         dir_remote,
-        file_config,
+        file_archive,
         file_bootstrap,
+        file_config,
         file_encrypt,
         )
 
