@@ -243,15 +243,16 @@ def test_clone_perms(
             run.out)
 
     # standard perms still apply afterwards unless disabled with auto.perms
-    assert paths.work.join(f'.{private_type}').stat().mode == 0o40700, (
-        f'.{private_type} has not been secured by auto.perms')
+    assert oct(
+        paths.work.join(f'.{private_type}').stat().mode).endswith('00'), (
+            f'.{private_type} has not been secured by auto.perms')
 
 
 def successful_clone(run, paths, repo_config, expected_code=0):
     """Assert clone is successful"""
     assert run.code == expected_code
     assert 'Initialized' in run.out
-    assert paths.repo.stat().mode == 0o42700
+    assert oct(paths.repo.stat().mode).endswith('00'), 'Repo is not secured'
     assert repo_config('core.bare') == 'false'
     assert repo_config('status.showUntrackedFiles') == 'no'
     assert repo_config('yadm.managed') == 'true'

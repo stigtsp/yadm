@@ -71,7 +71,8 @@ def test_init(
             assert repo_config('core.worktree') == home
 
         # uniform repo assertions
-        assert paths.repo.stat().mode == 0o42700
+        assert oct(paths.repo.stat().mode).endswith('00'), (
+            'Repo is not secure')
         assert repo_config('core.bare') == 'false'
         assert repo_config('status.showUntrackedFiles') == 'no'
         assert repo_config('yadm.managed') == 'true'
