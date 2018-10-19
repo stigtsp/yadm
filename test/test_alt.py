@@ -212,5 +212,5 @@ def linked_list(output):
     for line in output.splitlines():
         match = re.match('Linking (.+) to (.+)$', line)
         if match:
-            linked[match.group(1)] = match.group(2)
-    return linked.keys()
+            linked[match.group(2)] = match.group(1)
+    return linked.values()

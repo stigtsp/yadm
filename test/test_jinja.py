@@ -187,5 +187,5 @@ def created_list(output):
     for line in output.splitlines():
         match = re.match('Creating (.+) from template (.+)$', line)
         if match:
-            created[match.group(2)] = match.group(1)
-    return created.keys()
+            created[match.group(1)] = match.group(2)
+    return created.values()
