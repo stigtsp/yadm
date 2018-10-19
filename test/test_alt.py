@@ -1,11 +1,23 @@
 """Test alt"""
 import os
 import re
+import string
 import pytest
 import utils
 
+PRECEDENCE = [
+    '##',
+    '##$tst_sys',
+    '##$tst_sys.$tst_host',
+    '##$tst_sys.$tst_host.$tst_user',
+    '##$tst_class',
+    '##$tst_class.$tst_sys',
+    '##$tst_class.$tst_sys.$tst_host',
+    '##$tst_class.$tst_sys.$tst_host.$tst_user',
+    ]
 
-@pytest.mark.parametrize('precedence_index', range(8))
+
+@pytest.mark.parametrize('precedence_index', range(len(PRECEDENCE)))
 @pytest.mark.parametrize(
     'tracked, encrypt, exclude', [
         (False, False, False),
@@ -29,17 +41,17 @@ def test_alt(runner, yadm_y, paths,
     tst_class = 'testclass'
     utils.set_local(paths, 'class', tst_class)
 
-    # define the expected precedence of suffix
-    precedence = [
-        f'##',
-        f'##{tst_sys}',
-        f'##{tst_sys}.{tst_host}',
-        f'##{tst_sys}.{tst_host}.{tst_user}',
-        f'##{tst_class}',
-        f'##{tst_class}.{tst_sys}',
-        f'##{tst_class}.{tst_sys}.{tst_host}',
-        f'##{tst_class}.{tst_sys}.{tst_host}.{tst_user}',
-    ]
+    # process the templates in PRECEDENCE
+    precedence = list()
+    for template in PRECEDENCE:
+        precedence.append(
+            string.Template(template).substitute(
+                tst_class=tst_class,
+                tst_host=tst_host,
+                tst_sys=tst_sys,
+                tst_user=tst_user,
+            )
+        )
 
     # create files using a subset of files
     for suffix in precedence[0:precedence_index+1]:
