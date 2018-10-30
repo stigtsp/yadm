@@ -1,5 +1,6 @@
 """Test perms"""
 import os
+import warnings
 import pytest
 
 
@@ -46,9 +47,10 @@ def test_perms(runner, yadm_y, paths, ds1, autoperms):
 
     # these paths should be secured if processing perms
     for private in privatepaths:
-        # TODO: This skips tests for dot files within .ssh/.gnupg
-        #       This is a bug, which must be fixed.
         if '.p2' in private.basename or '.p4' in private.basename:
+            # Dot files within .ssh/.gnupg are not protected.
+            # This is a but which must be fixed
+            warnings.warn('Unhandled bug: private dot files', Warning)
             continue
         if autoperms == 'false':
             assert not oct(private.stat().mode).endswith('00'), (
@@ -93,9 +95,10 @@ def test_perms_control(runner, yadm_y, paths, ds1, sshperms, gpgperms):
 
     # these paths should be secured if processing perms
     for private in privatepaths:
-        # TODO: This skips tests for dot files within .ssh/.gnupg
-        #       This is a bug, which must be fixed.
         if '.p2' in private.basename or '.p4' in private.basename:
+            # Dot files within .ssh/.gnupg are not protected.
+            # This is a but which must be fixed
+            warnings.warn('Unhandled bug: private dot files', Warning)
             continue
         if (
                 (sshperms == 'false' and 'ssh' in str(private))
