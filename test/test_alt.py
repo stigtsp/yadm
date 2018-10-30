@@ -5,6 +5,15 @@ import string
 import pytest
 import utils
 
+# These test IDs are broken. During the writing of these tests, problems have
+# been discovered in the way yadm orders matching files.
+BROKEN_TEST_IDS = [
+    'test_wild[tracked-##C.S.H.U-C-S%-H%-U]',
+    'test_wild[tracked-##C.S.H.U-C-S-H%-U]',
+    'test_wild[encrypted-##C.S.H.U-C-S%-H%-U]',
+    'test_wild[encrypted-##C.S.H.U-C-S-H%-U]',
+    ]
+
 PRECEDENCE = [
     '##',
     '##$tst_sys',
@@ -15,6 +24,15 @@ PRECEDENCE = [
     '##$tst_class.$tst_sys.$tst_host',
     '##$tst_class.$tst_sys.$tst_host.$tst_user',
     ]
+
+WILD_TEMPLATES = [
+    '##$tst_class',
+    '##$tst_class.$tst_sys',
+    '##$tst_class.$tst_sys.$tst_host',
+    '##$tst_class.$tst_sys.$tst_host.$tst_user',
+    ]
+
+WILD_TESTED = set()
 
 
 @pytest.mark.parametrize('precedence_index', range(len(PRECEDENCE)))
@@ -75,6 +93,112 @@ def test_alt(runner, yadm_y, paths,
         else:
             assert not paths.work.join(file_path).exists()
             assert str(paths.work.join(source_file)) not in linked
+
+
+def short_template(template):
+    """Translate template into something short for test IDs"""
+    return string.Template(template).substitute(
+        tst_class='C',
+        tst_host='H',
+        tst_sys='S',
+        tst_user='U',
+    )
+
+
+@pytest.mark.parametrize('wild_user', [True, False], ids=['U%', 'U'])
+@pytest.mark.parametrize('wild_host', [True, False], ids=['H%', 'H'])
+@pytest.mark.parametrize('wild_sys', [True, False], ids=['S%', 'S'])
+@pytest.mark.parametrize('wild_class', [True, False], ids=['C%', 'C'])
+@pytest.mark.parametrize('template', WILD_TEMPLATES, ids=short_template)
+@pytest.mark.parametrize(
+    'tracked, encrypt', [
+        (True, False),
+        (False, True),
+    ], ids=[
+        'tracked',
+        'encrypted',
+    ])
+@pytest.mark.usefixtures('ds1_copy')
+def test_wild(request, runner, yadm_y, paths,
+              tst_sys, tst_host, tst_user,
+              tracked, encrypt,
+              wild_class, wild_host, wild_sys, wild_user,
+              template):
+    """Test wild linking"""
+
+    if request.node.name in BROKEN_TEST_IDS:
+        pytest.xfail(
+            'This test is known to be broken. '
+            'This bug needs to be fixed.')
+
+    tst_class = 'testclass'
+
+    # determine the "wild" version of the suffix
+    str_class = '%' if wild_class else tst_class
+    str_host = '%' if wild_host else tst_host
+    str_sys = '%' if wild_sys else tst_sys
+    str_user = '%' if wild_user else tst_user
+    wild_suffix = string.Template(template).substitute(
+        tst_class=str_class,
+        tst_host=str_host,
+        tst_sys=str_sys,
+        tst_user=str_user,
+    )
+
+    # determine the "standard" version of the suffix
+    std_suffix = string.Template(template).substitute(
+        tst_class=tst_class,
+        tst_host=tst_host,
+        tst_sys=tst_sys,
+        tst_user=tst_user,
+    )
+
+    # skip over dupliate tests (this seems to be the simplest way to cover the
+    # permutations of tests, while skipping duplicates.)
+    test_key = f'{tracked}{encrypt}{wild_suffix}{std_suffix}'
+    if test_key in WILD_TESTED:
+        return
+    else:
+        WILD_TESTED.add(test_key)
+
+    # set the class
+    utils.set_local(paths, 'class', tst_class)
+
+    # create files using a the wild suffix
+    utils.create_alt_files(paths, wild_suffix, tracked=tracked,
+                           encrypt=encrypt, exclude=False)
+
+    # run alt to trigger linking
+    run = runner(yadm_y('alt'))
+    run.report()
+    assert run.code == 0
+    assert run.err == ''
+    linked = linked_list(run.out)
+
+    # assert the proper linking has occurred
+    for file_path in (utils.ALT_FILE1, utils.ALT_FILE2):
+        source_file = file_path + wild_suffix
+        assert paths.work.join(file_path).islink()
+        assert paths.work.join(file_path).read() == source_file
+        assert str(paths.work.join(source_file)) in linked
+
+    # create files using a the standard suffix
+    utils.create_alt_files(paths, std_suffix, tracked=tracked,
+                           encrypt=encrypt, exclude=False)
+
+    # run alt to trigger linking
+    run = runner(yadm_y('alt'))
+    run.report()
+    assert run.code == 0
+    assert run.err == ''
+    linked = linked_list(run.out)
+
+    # assert the proper linking has occurred
+    for file_path in (utils.ALT_FILE1, utils.ALT_FILE2):
+        source_file = file_path + std_suffix
+        assert paths.work.join(file_path).islink()
+        assert paths.work.join(file_path).read() == source_file
+        assert str(paths.work.join(source_file)) in linked
 
 
 @pytest.mark.usefixtures('ds1_copy')
