@@ -138,7 +138,10 @@ class Runner(object):
             expect=None,
             label=None):
         self.label = label
-        self.command = command
+        if shell:
+            self.command = ' '.join([str(cmd) for cmd in command])
+        else:
+            self.command = command
         self.inp = inp
         self.wrap(expect)
         process = Popen(
