@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y locales
 RUN locale-gen en_US.UTF-8
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
+# Convenience settings for the testbed's root account
+RUN echo 'set -o vi' >> /root/.bashrc
+
 # Install prerequisites
 RUN apt-get update && apt-get install -y git gnupg1 make shellcheck=0.4.6-1 bats expect curl python3-pip lsb-release
 RUN pip3 install envtpl pytest==3.6.4 pylint==1.9.2 flake8==3.5.0
