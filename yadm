@@ -425,11 +425,13 @@ function encrypt() {
   if [ "$GPG_KEY" = "ASK" ]; then
     GPG_OPTS=("--no-default-recipient" "-e")
   elif [ "$GPG_KEY" != "" ]; then
-    GPG_OPTS=("-e" "-r $GPG_KEY")
+    GPG_OPTS=("-e")
+    for key in $GPG_KEY; do
+      GPG_OPTS+=("-r $key")
+    done
   else
     GPG_OPTS=("-c")
   fi
-
   #; report which files will be encrypted
   echo "Encrypting the following files:"
   printf '%s\n' "${ENCRYPT_INCLUDE_FILES[@]}"
